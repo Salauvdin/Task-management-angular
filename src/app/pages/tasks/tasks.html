@@ -1,0 +1,395 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100 p-8">
+
+  <div class="max-w-7xl mx-auto">
+
+    <!-- HEADER with subtle gradient -->
+    <div class="flex justify-between items-center mb-10 bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10">
+      <div>
+        <h1 class="text-4xl font-semibold text-white tracking-wide">Task Management</h1>
+        <p class="text-gray-400 text-sm mt-1 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-list text-blue-400"></i>
+          Manage and track your team tasks efficiently
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <!-- Create Task Button - Using hasPermission directive -->
+        <button
+          *hasPermission="{ menu: 'Tasks', action: 'write' }"
+          class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl transition-all duration-200 flex gap-2 items-center hover:scale-105"
+          (click)="openTaskForm()"
+        >
+          <i class="fa-solid fa-plus"></i>
+          Create Task
+        </button>
+      </div>
+    </div>
+
+    <!-- No Permission Message -->
+    <div *ngIf="!canRead" class="text-center py-12 bg-white/5 rounded-xl border border-white/10">
+      <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-lock text-4xl text-red-400"></i>
+      </div>
+      <p class="text-gray-400">You don't have permission to view tasks</p>
+      <p class="text-gray-500 text-sm mt-2">Please contact your administrator</p>
+    </div>
+
+    <!-- Content - Only show if has read permission -->
+    <ng-container *ngIf="canRead">
+
+      <!-- STATS with subtle colored gradients -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+        <!-- Total Tasks - Light Blue -->
+        <div class="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 hover:border-blue-500/30 transition-all duration-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-blue-300 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-simple"></i>
+                Total Tasks
+              </p>
+              <p class="text-4xl font-semibold mt-2 text-white">{{ tasks.length }}</p>
+            </div>
+            <div class="bg-blue-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-list-check text-blue-300 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-blue-400/70">
+            <i class="fa-regular fa-clock"></i> Updated just now
+          </div>
+        </div>
+
+        <!-- Completed - Light Green -->
+        <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-600/5 border border-emerald-500/20 hover:border-emerald-500/30 transition-all duration-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-emerald-300 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i>
+                Completed
+              </p>
+              <p class="text-4xl font-semibold mt-2 text-white">
+                {{ tasks.filter(t => t.Statues === 'Completed' || t.status === 'Completed').length }}
+              </p>
+            </div>
+            <div class="bg-emerald-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-circle-check text-emerald-300 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-emerald-400/70">
+            <i class="fa-solid fa-check"></i> Tasks finished
+          </div>
+        </div>
+
+        <!-- Pending - Light Yellow -->
+        <div class="p-6 rounded-xl bg-gradient-to-br from-yellow-500/10 to-amber-600/5 border border-yellow-500/20 hover:border-yellow-500/30 transition-all duration-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-yellow-300 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-clock"></i>
+                Pending
+              </p>
+              <p class="text-4xl font-semibold mt-2 text-white">
+                {{ tasks.filter(t => t.Statues === 'Pending' || t.status === 'Pending').length }}
+              </p>
+            </div>
+            <div class="bg-yellow-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-clock text-yellow-300 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-yellow-400/70">
+            <i class="fa-solid fa-hourglass-half"></i> Awaiting completion
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SEARCH with toggle and filter indicator -->
+      <div class="mb-8 flex justify-between items-center">
+        <div class="relative w-80">
+          <i class="fa-solid fa-search absolute left-3 top-3 text-gray-500"></i>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            [(ngModel)]="searchText"
+            (input)="filterTasks()"
+            class="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-3 py-2.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none text-gray-200 placeholder-gray-500 transition-all duration-200"
+          />
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <!-- Filter indicator -->
+          <div class="text-sm text-gray-500">
+            <span class="bg-white/5 px-3 py-1.5 rounded-lg">
+              {{ filteredTasks.length }} tasks found
+            </span>
+          </div>
+
+          <!-- View Toggle Buttons -->
+          <div class="bg-white/5 rounded-lg p-1 flex gap-1 border border-white/10">
+            <button
+              (click)="viewMode = 'card'"
+              class="px-3 py-2 rounded-lg transition-all duration-200"
+              [ngClass]="{
+                'bg-blue-500/20 text-blue-300': viewMode === 'card',
+                'text-gray-400 hover:text-white': viewMode !== 'card'
+              }"
+              title="Card View"
+            >
+              <i class="fa-solid fa-cards"></i>
+            </button>
+            <button
+              (click)="viewMode = 'table'"
+              class="px-3 py-2 rounded-lg transition-all duration-200"
+              [ngClass]="{
+                'bg-blue-500/20 text-blue-300': viewMode === 'table',
+                'text-gray-400 hover:text-white': viewMode !== 'table'
+              }"
+              title="Table View"
+            >
+              <i class="fa-solid fa-table"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD VIEW -->
+      <div *ngIf="viewMode === 'card'" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          *ngFor="let task of filteredTasks"
+          class="bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl hover:border-white/20 transition-all duration-200 group"
+        >
+          <!-- CARD HEADER -->
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-lg font-medium text-white break-all flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-400 group-hover:scale-150 transition-all duration-200"></span>
+              {{ task.taskName }}
+            </h3>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+              <!-- Edit Button - Using hasPermission directive -->
+              <button
+                *hasPermission="{ menu: 'Tasks', action: 'write' }"
+                class="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 transition-all duration-200"
+                (click)="openTaskForm(task)"
+                title="Edit Task"
+              >
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+              <!-- Delete Button - Using hasPermission directive -->
+              <button
+                *hasPermission="{ menu: 'Tasks', action: 'delete' }"
+                class="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all duration-200"
+                (click)="showDialog(task)"
+                title="Delete Task"
+              >
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- TASK DETAILS with colored badges -->
+          <div class="space-y-3">
+            <!-- STATUS -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-400">Status</span>
+              <span
+                class="px-3 py-1 text-xs rounded-full font-medium"
+                [ngClass]="{
+                  'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': (task.Statues || task.status) === 'Pending',
+                  'bg-blue-500/20 text-blue-300 border border-blue-500/30': (task.Statues || task.status) === 'In Progress',
+                  'bg-green-500/20 text-green-300 border border-green-500/30': (task.Statues || task.status) === 'Completed'
+                }"
+              >
+                {{task.Statues || task.status || 'Pending'}}
+              </span>
+            </div>
+
+            <!-- PRIORITY -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-400">Priority</span>
+              <span
+                class="px-3 py-1 text-xs rounded-full font-medium"
+                [ngClass]="{
+                  'bg-green-500/20 text-green-300 border border-green-500/30': (task.Priorty || task.priority) === 'Low',
+                  'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': (task.Priorty || task.priority) === 'Medium',
+                  'bg-red-500/20 text-red-300 border border-red-500/30': (task.Priorty || task.priority) === 'High'
+                }"
+              >
+                {{task.Priorty || task.priority || 'Medium'}}
+              </span>
+            </div>
+
+            <!-- DATE -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-400">Due Date</span>
+              <span class="text-gray-300 flex items-center gap-1">
+                <i class="fa-regular fa-calendar text-gray-500"></i>
+                {{(task.startDate || task.dueDate) | date:'mediumDate'}}
+              </span>
+            </div>
+
+            <!-- PROGRESS BAR -->
+            <div class="mt-4 pt-3 border-t border-white/5">
+              <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Progress</span>
+                <span>
+                  <span *ngIf="(task.Statues || task.status) === 'Completed'">100%</span>
+                  <span *ngIf="(task.Statues || task.status) === 'In Progress'">50%</span>
+                  <span *ngIf="(task.Statues || task.status) === 'Pending'">0%</span>
+                </span>
+              </div>
+              <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  class="h-full rounded-full transition-all duration-300"
+                  [ngClass]="{
+                    'bg-green-500/50': (task.Statues || task.status) === 'Completed',
+                    'bg-blue-500/50': (task.Statues || task.status) === 'In Progress',
+                    'bg-yellow-500/50': (task.Statues || task.status) === 'Pending'
+                  }"
+                  [style.width]="(task.Statues || task.status) === 'Completed' ? '100%' : ((task.Statues || task.status) === 'In Progress' ? '50%' : '0%')"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state for cards -->
+        <div *ngIf="filteredTasks.length === 0" class="col-span-full">
+          <div class="text-center py-12 bg-white/5 rounded-xl border border-white/10">
+            <i class="fa-solid fa-clipboard-list text-4xl text-gray-600 mb-3"></i>
+            <p class="text-gray-400">No tasks found</p>
+            <!-- Create Task Button in Empty State - Using hasPermission directive -->
+            <button 
+              *hasPermission="{ menu: 'Tasks', action: 'write' }"
+              class="mt-4 text-blue-400 hover:text-blue-300 text-sm"
+              (click)="openTaskForm()">
+              Create your first task
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div *ngIf="viewMode === 'table'" class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-white/5 text-gray-300 text-sm border-b border-white/10">
+                <th class="p-4">Task Name</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Priority</th>
+                <th class="p-4">Due Date</th>
+                <!-- Actions column - Using hasPermission directive to check if either write or delete permission exists -->
+                <th *hasPermission="{ menu: 'Tasks', action: 'write' }" class="p-4 text-center">Actions</th>
+                <th *hasPermission="{ menu: 'Tasks', action: 'delete' }" class="p-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let task of filteredTasks" 
+                  class="border-b border-white/5 hover:bg-white/5 transition-all duration-200">
+                <td class="p-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                    <span class="font-medium">{{ task.taskName }}</span>
+                  </div>
+                </td>
+                <td class="p-4">
+                  <span
+                    class="px-3 py-1 text-xs rounded-full font-medium"
+                    [ngClass]="{
+                      'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': (task.Statues || task.status) === 'Pending',
+                      'bg-blue-500/20 text-blue-300 border border-blue-500/30': (task.Statues || task.status) === 'In Progress',
+                      'bg-green-500/20 text-green-300 border border-green-500/30': (task.Statues || task.status) === 'Completed'
+                    }"
+                  >
+                    {{task.Statues || task.status || 'Pending'}}
+                  </span>
+                </td>
+                <td class="p-4">
+                  <span
+                    class="px-3 py-1 text-xs rounded-full font-medium"
+                    [ngClass]="{
+                      'bg-green-500/20 text-green-300 border border-green-500/30': (task.Priorty || task.priority) === 'Low',
+                      'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': (task.Priorty || task.priority) === 'Medium',
+                      'bg-red-500/20 text-red-300 border border-red-500/30': (task.Priorty || task.priority) === 'High'
+                    }"
+                  >
+                    {{task.Priorty || task.priority || 'Medium'}}
+                  </span>
+                </td>
+                <td class="p-4 text-gray-300">
+                  <i class="fa-regular fa-calendar mr-2 text-gray-500"></i>
+                  {{(task.startDate || task.dueDate) | date:'mediumDate'}}
+                </td>
+                <!-- Edit Button Column - Using hasPermission directive -->
+                <td *hasPermission="{ menu: 'Tasks', action: 'write' }" class="p-4">
+                  <div class="flex gap-2 justify-center">
+                    <button
+                      class="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 transition-all duration-200"
+                      (click)="openTaskForm(task)"
+                      title="Edit Task"
+                    >
+                      <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+                <!-- Delete Button Column - Using hasPermission directive -->
+                <td *hasPermission="{ menu: 'Tasks', action: 'delete' }" class="p-4">
+                  <div class="flex gap-2 justify-center">
+                    <button
+                      class="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all duration-200"
+                      (click)="showDialog(task)"
+                      title="Delete Task"
+                    >
+                      <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+               </tr>
+              
+              <!-- Empty state for table -->
+              <tr *ngIf="filteredTasks.length === 0">
+                <td colspan="5" class="p-12 text-center">
+                  <i class="fa-solid fa-clipboard-list text-4xl text-gray-600 mb-3"></i>
+                  <p class="text-gray-400">No tasks found</p>
+                  <button 
+                    *hasPermission="{ menu: 'Tasks', action: 'write' }"
+                    class="mt-4 text-blue-400 hover:text-blue-300 text-sm"
+                    (click)="openTaskForm()">
+                    Create your first task
+                  </button>
+                 </td>
+               </tr>
+            </tbody>
+           </table>
+        </div>
+        
+        <!-- Table Footer with pagination -->
+        <div class="p-4 border-t border-white/5 flex justify-between items-center text-sm text-gray-500">
+          <span>Showing {{filteredTasks.length}} of {{tasks.length}} tasks</span>
+          <div class="flex gap-2">
+            <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <button class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-500/30">1</button>
+            <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">2</button>
+            <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">3</button>
+            <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER with summary -->
+      <div class="mt-8 text-center text-sm text-gray-500 border-t border-white/5 pt-6">
+        <div class="flex justify-center gap-6">
+          <span><span class="text-blue-400">{{ tasks.length }}</span> Total</span>
+          <span><span class="text-green-400">{{ tasks.filter(t => t.Statues === 'Completed' || t.status === 'Completed').length }}</span> Completed</span>
+          <span><span class="text-yellow-400">{{ tasks.filter(t => t.Statues === 'Pending' || t.status === 'Pending').length }}</span> Pending</span>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+</div>

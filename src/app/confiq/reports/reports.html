@@ -1,0 +1,342 @@
+<div class="flex select-none min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100">
+
+  <div class="flex-1 p-8 overflow-y-auto">
+
+    <!-- Header with glassmorphism -->
+    <div class="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+      <div>
+        <h1 class="text-4xl font-semibold text-white tracking-wide flex items-center gap-3">
+          <i class="fa-solid fa-chart-bar text-blue-400"></i>
+          Reports
+        </h1>
+        <p class="text-gray-400 text-sm mt-2 flex items-center gap-2">
+          <i class="fa-solid fa-chart-line text-blue-400/70"></i>
+          View task performance and productivity reports
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <button class="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-200">
+          <i class="fa-solid fa-download"></i>
+          Export
+        </button>
+        <button class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all duration-200">
+          <i class="fa-solid fa-calendar"></i>
+          Filter Date
+        </button>
+      </div>
+    </div>
+
+    <!-- REPORT STATS with subtle colors -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
+      <!-- Total Tasks - Light Blue -->
+      <div class="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 hover:border-blue-500/30 transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-blue-300 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-chart-simple"></i>
+              Total Tasks
+            </p>
+            <p class="text-3xl font-semibold mt-2 text-white">{{totalTasks}}</p>
+          </div>
+          <div class="bg-blue-500/20 p-3 rounded-lg">
+            <i class="fa-solid fa-list-check text-blue-300 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-blue-400/70">
+          <i class="fa-regular fa-clock"></i> All time
+        </div>
+      </div>
+
+      <!-- Completed - Light Green -->
+      <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-600/5 border border-emerald-500/20 hover:border-emerald-500/30 transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-emerald-300 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-circle-check"></i>
+              Completed
+            </p>
+            <p class="text-3xl font-semibold mt-2 text-white">{{completedTasks}}</p>
+          </div>
+          <div class="bg-emerald-500/20 p-3 rounded-lg">
+            <i class="fa-solid fa-circle-check text-emerald-300 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-emerald-400/70">
+          <i class="fa-solid fa-check"></i> {{completionRate}}% of total
+        </div>
+      </div>
+
+      <!-- Pending - Light Yellow -->
+      <div class="p-6 rounded-xl bg-gradient-to-br from-yellow-500/10 to-amber-600/5 border border-yellow-500/20 hover:border-yellow-500/30 transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-yellow-300 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-clock"></i>
+              Pending
+            </p>
+            <p class="text-3xl font-semibold mt-2 text-white">{{pendingTasks}}</p>
+          </div>
+          <div class="bg-yellow-500/20 p-3 rounded-lg">
+            <i class="fa-solid fa-clock text-yellow-300 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-yellow-400/70">
+          <i class="fa-solid fa-hourglass-half"></i> {{100 - completionRate}}% of total
+        </div>
+      </div>
+
+      <!-- Completion Rate - Light Purple -->
+      <div class="p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-violet-600/5 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-purple-300 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-percent"></i>
+              Completion Rate
+            </p>
+            <p class="text-3xl font-semibold mt-2 text-white">{{completionRate}}%</p>
+          </div>
+          <div class="bg-purple-500/20 p-3 rounded-lg">
+            <i class="fa-solid fa-chart-line text-purple-300 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-purple-400/70">
+          <i class="fa-regular fa-star"></i> 
+          <span [ngClass]="{'text-green-400': completionRate >= 70, 'text-yellow-400': completionRate < 70 && completionRate >= 40, 'text-red-400': completionRate < 40}">
+            {{completionRate >= 70 ? 'Good' : (completionRate >= 40 ? 'Average' : 'Needs improvement')}}
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Progress Bars with better design -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      
+      <!-- Task Progress Card -->
+      <div class="p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+        <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-blue-400"></i>
+          Task Progress Overview
+        </h2>
+
+        <!-- Completed Progress -->
+        <div class="mb-5">
+          <div class="flex justify-between text-sm mb-2">
+            <span class="text-gray-400 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Completed
+            </span>
+            <span class="text-white font-medium">{{completionRate}}%</span>
+          </div>
+          <div class="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-emerald-400 to-green-500 h-2.5 rounded-full transition-all duration-500"
+              [style.width.%]="completionRate">
+            </div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <span>{{completedTasks}} tasks</span>
+            <span>{{totalTasks - completedTasks}} remaining</span>
+          </div>
+        </div>
+
+        <!-- Pending Progress -->
+        <div>
+          <div class="flex justify-between text-sm mb-2">
+            <span class="text-gray-400 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+              Pending
+            </span>
+            <span class="text-white font-medium">{{100 - completionRate}}%</span>
+          </div>
+          <div class="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-yellow-400 to-amber-500 h-2.5 rounded-full transition-all duration-500"
+              [style.width.%]="100 - completionRate">
+            </div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <span>{{pendingTasks}} tasks</span>
+            <span>In progress</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Distribution Card -->
+      <div class="p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+        <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-chart-bar text-purple-400"></i>
+          Priority Distribution
+        </h2>
+
+        <div class="space-y-4">
+          <!-- High Priority -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                High Priority
+              </span>
+              <span class="text-white font-medium">{{highPriorityCount}}</span>
+            </div>
+            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+              <div
+                class="bg-red-500/50 h-2 rounded-full"
+                [style.width.%]="(highPriorityCount / totalTasks) * 100">
+              </div>
+            </div>
+          </div>
+
+          <!-- Medium Priority -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                Medium Priority
+              </span>
+              <span class="text-white font-medium">{{mediumPriorityCount}}</span>
+            </div>
+            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+              <div
+                class="bg-yellow-500/50 h-2 rounded-full"
+                [style.width.%]="(mediumPriorityCount / totalTasks) * 100">
+              </div>
+            </div>
+          </div>
+
+          <!-- Low Priority -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                Low Priority
+              </span>
+              <span class="text-white font-medium">{{lowPriorityCount}}</span>
+            </div>
+            <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+              <div
+                class="bg-green-500/50 h-2 rounded-full"
+                [style.width.%]="(lowPriorityCount / totalTasks) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TABLE with enhanced design -->
+    <div class="p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+
+        <h2 class="text-lg font-medium text-white flex items-center gap-2">
+          <i class="fa-solid fa-table text-blue-400"></i>
+          Task Report
+          <span class="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 ml-2">
+            {{filteredTasks.length}} tasks
+          </span>
+        </h2>
+
+        <!-- Search with icon -->
+        <div class="flex relative w-full sm:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500"></i>
+          <input
+            [(ngModel)]="searchText"
+            (input)="filterTasks()"
+            type="text"
+            placeholder="Search tasks..."
+            class="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none text-gray-200 placeholder-gray-500 transition-all duration-200"
+          />
+        </div>
+
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-lg border border-white/10">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="bg-white/5 text-gray-300 text-sm border-b border-white/10">
+              <th class="p-4">Task</th>
+              <th class="p-4">Status</th>
+              <th class="p-4">Priority</th>
+              <th class="p-4">Due Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let task of filteredTasks" 
+                class="border-b border-white/5 hover:bg-white/5 transition-all duration-200">
+              <td class="p-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                  <span class="font-medium">{{task.name}}</span>
+                </div>
+              </td>
+              <td class="p-4">
+                <span
+                  class="px-3 py-1 text-xs rounded-full font-medium"
+                  [ngClass]="{
+                    'bg-green-500/20 text-green-300 border border-green-500/30': task.status==='Completed',
+                    'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': task.status==='Pending',
+                    'bg-blue-500/20 text-blue-300 border border-blue-500/30': task.status==='In Progress'
+                  }"
+                >
+                  <i class="fa-regular fa-circle-check mr-1" *ngIf="task.status==='Completed'"></i>
+                  <i class="fa-regular fa-clock mr-1" *ngIf="task.status==='Pending'"></i>
+                  <i class="fa-regular fa-spinner mr-1" *ngIf="task.status==='In Progress'"></i>
+                  {{task.status}}
+                </span>
+              </td>
+              <td class="p-4">
+                <span
+                  class="px-3 py-1 text-xs rounded-full font-medium"
+                  [ngClass]="{
+                    'bg-red-500/20 text-red-300 border border-red-500/30': task.Priority==='High',
+                    'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30': task.Priority==='Medium',
+                    'bg-green-500/20 text-green-300 border border-green-500/30': task.Priority==='Low'
+                  }"
+                >
+                  <i class="fa-solid fa-flag mr-1"></i>
+                  {{task.Priority}}
+                </span>
+              </td>
+              <td class="p-4 text-gray-300">
+                <i class="fa-regular fa-calendar mr-2 text-gray-500"></i>
+                {{task.date | date:'mediumDate'}}
+              </td>
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="filteredTasks.length === 0">
+              <td colspan="4" class="p-12 text-center">
+                <i class="fa-solid fa-clipboard-list text-4xl text-gray-600 mb-3"></i>
+                <p class="text-gray-400">No tasks found</p>
+                <p class="text-sm text-gray-500 mt-1">Try adjusting your search</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer with summary -->
+      <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+        <span>Showing {{filteredTasks.length}} of {{totalTasks}} tasks</span>
+        <div class="flex gap-2">
+          <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-500/30">1</button>
+          <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">2</button>
+          <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">3</button>
+          <button class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

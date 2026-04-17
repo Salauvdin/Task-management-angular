@@ -1,0 +1,134 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100 p-8">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Dashboard Content - Using hasPermission directive -->
+    <div *hasPermission="{ menu: 'View Dashboard', action: 'read' }">
+      
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+        <p class="text-gray-400 mt-1">Welcome back! Here's an overview of your tasks and projects</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Tasks -->
+        <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-6 border border-blue-500/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-blue-300 text-sm">Total Tasks</p>
+              <p class="text-3xl font-bold text-white mt-2">{{ stats.totalTasks }}</p>
+            </div>
+            <div class="bg-blue-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-tasks text-blue-300 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completed Tasks -->
+        <div class="bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-xl p-6 border border-green-500/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-green-300 text-sm">Completed</p>
+              <p class="text-3xl font-bold text-white mt-2">{{ stats.completedTasks }}</p>
+            </div>
+            <div class="bg-green-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-circle-check text-green-300 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- In Progress Tasks -->
+        <div class="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 rounded-xl p-6 border border-yellow-500/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-yellow-300 text-sm">In Progress</p>
+              <p class="text-3xl font-bold text-white mt-2">{{ stats.inProgressTasks }}</p>
+            </div>
+            <div class="bg-yellow-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-spinner text-yellow-300 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Tasks -->
+        <div class="bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl p-6 border border-purple-500/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-purple-300 text-sm">Pending</p>
+              <p class="text-3xl font-bold text-white mt-2">{{ stats.pendingTasks }}</p>
+            </div>
+            <div class="bg-purple-500/20 p-3 rounded-lg">
+              <i class="fa-solid fa-clock text-purple-300 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Tasks Table -->
+      <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/10">
+          <h3 class="text-lg font-semibold text-white">Recent Tasks</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-white/5 text-gray-300 text-sm border-b border-white/10">
+                <th class="p-4 text-left">Task Name</th>
+                <th class="p-4 text-left">Assigned To</th>
+                <th class="p-4 text-left">Priority</th>
+                <th class="p-4 text-left">Status</th>
+                <th class="p-4 text-left">Due Date</th>
+                <th class="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let task of recentTasks" class="border-b border-white/5 hover:bg-white/5">
+                <td class="p-4">{{ task.name }}</td>
+                <td class="p-4">{{ task.assignedTo }}</td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getPriorityClass(task.priority)">
+                    {{ task.priority }}
+                  </span>
+                </td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getStatusClass(task.status)">
+                    {{ task.status }}
+                  </span>
+                </td>
+                <td class="p-4">{{ task.date }}</td>
+                <td class="p-4">
+                  <div class="flex gap-2">
+                    <!-- Edit button with permission directive -->
+                    <button *hasPermission="{ menu: 'Tasks', action: 'write' }" 
+                            (click)="addTask()"
+                            class="text-blue-400 hover:text-blue-300">
+                      <i class="fa-solid fa-edit"></i> Edit
+                    </button>
+                    <!-- Delete button with permission directive -->
+                    <button *hasPermission="{ menu: 'Tasks', action: 'delete' }" 
+                            (click)="deleteTask(task)"
+                            class="text-red-400 hover:text-red-300">
+                      <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                  </div>
+                </td>
+               </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- No Permission Message -->
+    <div *ngIf="!authService.hasPermission('View Dashboard', 'read')" class="text-center py-12 bg-white/5 rounded-xl border border-white/10">
+      <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-lock text-4xl text-red-400"></i>
+      </div>
+      <p class="text-gray-400">don't have permission to view the dashboard</p>
+      <p class="text-gray-500 text-sm mt-2">Please contact your administrator</p>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,7 @@
+.delete-dialog {
+  background-color: #7f1d1d !important;
+  color: white;
+}
+::ng-deep .delete-dialog {
+  background: #7f1d1d !important;
+}

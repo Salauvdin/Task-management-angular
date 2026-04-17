@@ -1,0 +1,26 @@
+::ng-deep .delete-dialog {
+  background: #7f1d1d !important;
+  color: white;
+  border-radius: 12px;
+
+  /* animation */
+  animation: deletePopup 0.35s ease;
+  transform-origin: center;
+}
+
+/* animation keyframes */
+@keyframes deletePopup {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.05) translateY(5px);
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}

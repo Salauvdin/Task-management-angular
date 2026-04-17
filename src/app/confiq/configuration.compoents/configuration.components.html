@@ -1,0 +1,300 @@
+<div class="min-h-screen w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-100 p-8">
+
+  <div class="max-w-4xl mx-auto">
+
+    <!-- HEADER with glassmorphism -->
+    <div class="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+      <div>
+        <h1 class="text-4xl font-semibold text-white tracking-wide flex items-center gap-3">
+          <i class="fa-solid fa-user-circle text-blue-400"></i>
+          User Profile
+        </h1>
+        <p class="text-gray-400 text-sm mt-2 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-blue-400/70"></i>
+          Update your profile information
+        </p>
+      </div>
+    </div>
+
+    <!-- MAIN PROFILE CARD -->
+    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-xl">
+
+      <!-- PROFILE HEADER with avatar -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 pb-6 border-b border-white/10">
+        
+        <!-- Profile Image with Upload Overlay -->
+        <div class="relative group">
+          <div class="w-24 h-24 rounded-full overflow-hidden border-3 border-blue-500/30 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+            <img
+              *ngIf="userProfile.logo"
+              [src]="userProfile.logo"
+              class="w-full h-full object-cover"
+            />
+            <div
+              *ngIf="!userProfile.logo"
+              class="w-full h-full flex items-center justify-center text-3xl font-semibold text-blue-300"
+            >
+              {{userProfile.name?.charAt(0) || 'U'}}
+            </div>
+          </div>
+          
+          <!-- Upload Overlay -->
+          <label class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200">
+            <i class="fa-solid fa-camera text-white text-xl"></i>
+            <input type="file" (change)="updateLogo($event)" class="hidden" />
+          </label>
+        </div>
+
+        <!-- User Info -->
+        <div class="flex-1">
+          <h2 class="text-2xl font-semibold text-white">{{ userProfile.name || 'Your Name' }}</h2>
+          <p class="text-gray-400 flex items-center gap-2 mt-1">
+            <i class="fa-regular fa-envelope"></i>
+            {{ userProfile.email || 'email@example.com' }}
+          </p>
+          <p class="text-gray-500 text-sm mt-2 flex items-center gap-2">
+            <i class="fa-regular fa-id-card"></i>
+            Member since: {{ currentDate | date:'mediumDate' }}
+          </p>
+        </div>
+
+        <!-- Role Badge -->
+        <div class="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30">
+          <span class="text-sm text-blue-300 flex items-center gap-2">
+            <i class="fa-solid fa-shield"></i>
+            {{ userProfile.role || 'Not set' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- FORM SECTION -->
+      <div class="space-y-6">
+        
+        <!-- Section Title -->
+        <div class="flex items-center gap-2">
+          <div class="w-1 h-6 bg-blue-400 rounded-full"></div>
+          <h3 class="text-lg font-medium text-white">Personal Information</h3>
+        </div>
+
+        <!-- Form Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- NAME -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-regular fa-user text-blue-400"></i>
+              Full Name
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="userProfile.name"
+              placeholder="Enter your full name"
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <!-- EMAIL -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-regular fa-envelope text-blue-400"></i>
+              Email Address
+            </label>
+            <input
+              type="email"
+              [(ngModel)]="userProfile.email"
+              placeholder="Enter your email"
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <!-- PHONE -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-phone text-blue-400"></i>
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              [(ngModel)]="userProfile.phone"
+              placeholder="Enter your phone number"
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <!-- ROLE -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-briefcase text-blue-400"></i>
+              Role
+            </label>
+            <select 
+              [(ngModel)]="userProfile.role" 
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none transition-all duration-200"
+            >
+              <option value="" disabled selected class="bg-slate-800">Select your role</option>
+              <option value="Admin" class="bg-slate-800">Admin</option>
+              <option value="Manager" class="bg-slate-800">Manager</option>
+              <option value="Member" class="bg-slate-800">Member</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- ADDRESS Section -->
+        <div class="space-y-2 pt-4">
+          <label class="text-sm text-gray-400 flex items-center gap-2">
+            <i class="fa-solid fa-location-dot text-blue-400"></i>
+            Address
+          </label>
+          <textarea
+            [(ngModel)]="userProfile.address"
+            placeholder="Enter your address"
+            rows="3"
+            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none transition-all duration-200 resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-white/10 my-6"></div>
+
+        <!-- Password Section -->
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-1 h-6 bg-yellow-400 rounded-full"></div>
+          <h3 class="text-lg font-medium text-white">Change Password</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- PASSWORD -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-lock text-yellow-400"></i>
+              New Password
+            </label>
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                [(ngModel)]="userProfile.password"
+                placeholder="Enter new password"
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/30 outline-none transition-all duration-200 pr-10"
+              />
+              <button 
+                type="button"
+                (click)="showPassword = !showPassword"
+                class="absolute right-3 top-3 text-gray-500 hover:text-gray-400"
+              >
+                <i [class]="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- CONFIRM PASSWORD -->
+          <div class="space-y-2">
+            <label class="text-sm text-gray-400 flex items-center gap-2">
+              <i class="fa-solid fa-lock text-yellow-400"></i>
+              Confirm Password
+            </label>
+            <div class="relative">
+              <input
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                [(ngModel)]="userProfile.confirmPassword"
+                placeholder="Confirm new password"
+                class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/30 outline-none transition-all duration-200 pr-10"
+              />
+              <button 
+                type="button"
+                (click)="showConfirmPassword = !showConfirmPassword"
+                class="absolute right-3 top-3 text-gray-500 hover:text-gray-400"
+              >
+                <i [class]="showConfirmPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Password Strength Indicator (Optional) -->
+        <div *ngIf="userProfile.password" class="mt-2">
+          <div class="flex gap-1 h-1">
+            <div class="flex-1 h-full rounded-full" 
+                 [ngClass]="{
+                   'bg-red-500': getPasswordStrength() === 'weak',
+                   'bg-yellow-500': getPasswordStrength() === 'medium',
+                   'bg-green-500': getPasswordStrength() === 'strong'
+                 }"></div>
+            <div class="flex-1 h-full rounded-full bg-white/10" 
+                 *ngIf="getPasswordStrength() !== 'strong'"></div>
+            <div class="flex-1 h-full rounded-full bg-white/10" 
+                 *ngIf="getPasswordStrength() === 'weak'"></div>
+          </div>
+          <p class="text-xs mt-2" 
+             [ngClass]="{
+               'text-red-400': getPasswordStrength() === 'weak',
+               'text-yellow-400': getPasswordStrength() === 'medium',
+               'text-green-400': getPasswordStrength() === 'strong'
+             }">
+            {{ getPasswordStrengthMessage() }}
+          </p>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex gap-4 pt-6">
+          <button
+            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 px-8 py-3 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all duration-200 hover:scale-105"
+            (click)="saveProfile()"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+            Save Changes
+          </button>
+          
+          <button
+            class="bg-white/5 hover:bg-white/10 border border-white/10 px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-200"
+            (click)="resetForm()"
+          >
+            <i class="fa-solid fa-rotate-right"></i>
+            Reset
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ACCOUNT INFO CARD (Optional) -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <i class="fa-regular fa-clock text-blue-300"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Last Login</p>
+          <p class="text-sm font-medium">Today, 10:30 AM</p>
+        </div>
+      </div>
+
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+          <i class="fa-regular fa-check-circle text-green-300"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Account Status</p>
+          <p class="text-sm font-medium text-green-400">Active</p>
+        </div>
+      </div>
+
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+          <i class="fa-regular fa-star text-purple-300"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Member Since</p>
+          <p class="text-sm font-medium">{{ currentDate | date:'MMM d, yyyy' }}</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
