@@ -5,7 +5,7 @@ import { ZardCardComponent } from '@/shared/components/card/card.component';
 // import { ZardIdDirective } from '@/shared/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { TaskService } from '@/services/task';
+import { TaskService } from '@/services/taskServiceapi';
 
 @Component({
   selector: 'app-register',

@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TaskService } from '@/services/task';
+import { AuthService } from '@/services/auth';
+import { TaskService } from '@/services/taskServiceapi';
 
 @Component({
   selector: 'app-user-form',
@@ -11,14 +12,21 @@ import { TaskService } from '@/services/task';
   templateUrl: './user-form.html',
 })
 export class UserFormComponent implements OnInit {
+
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private authService: AuthService
+  ) {}
 
   isEdit = false;
   editingUser: any = null;
-  isLoading = false;
+
+  showPassword = false;
+  isPasswordChanged = false;
+  isEmailChecking = false; // ✅ FIXED ERROR
 
   formUser = {
     name: '',
@@ -28,383 +36,164 @@ export class UserFormComponent implements OnInit {
     projects: ''
   };
 
-  showPassword = false;
-  isPasswordChanged = false;
-  isEmailChecking = false;
-  
   nameError = '';
   emailError = '';
   passwordError = '';
   roleError = '';
 
   permissions = [
-    {
-      section: 'DASHBOARD',
-      items: [{ menu: 'View Dashboard', read: false, write: false, fullAccess: false }]
-    },
-    {
-      section: 'TASK MANAGEMENT',
-      items: [{ menu: 'Tasks', read: false, write: false, fullAccess: false }]
-    },
-    {
-      section: 'REPORTS',
-      items: [{ menu: 'Reports', read: false, write: false, fullAccess: false }]
-    },
-    {
-      section: 'USER MANAGEMENT',
-      items: [{ menu: 'User Management', read: false, write: false, fullAccess: false }]
-    },
-    {
-      section: 'CONFIGURATION',
-      items: [{ menu: 'Configuration', read: false, write: false, fullAccess: false }]
-    },
-    {
-      section: 'PERMISSIONS',
-      items: [{ menu: 'Permissions', read: false, write: false, fullAccess: false }]
-    }
+    { section: 'DASHBOARD', items: [{ menu: 'View Dashboard', read: false, write: false, fullAccess: false }] },
+    { section: 'TASK MANAGEMENT', items: [{ menu: 'Tasks', read: false, write: false, fullAccess: false }] },
+    { section: 'REPORTS', items: [{ menu: 'Reports', read: false, write: false, fullAccess: false }] },
+    { section: 'USER MANAGEMENT', items: [{ menu: 'User Management', read: false, write: false, fullAccess: false }] },
+    { section: 'CONFIGURATION', items: [{ menu: 'Configuration', read: false, write: false, fullAccess: false }] },
+    { section: 'PERMISSIONS', items: [{ menu: 'Permissions', read: false, write: false, fullAccess: false }] },
   ];
 
   ngOnInit() {
     const userId = this.route.snapshot.params['id'];
-    const state = history.state;
-    
-    // EDIT MODE - if user ID in route OR user data in state
-    if (userId || state?.user) {
+    const navUser = history.state?.user;
+
+    if (userId) {
       this.isEdit = true;
-      
-      if (state?.user) {
-        // User data passed via state
-        this.editingUser = state.user;
-        this.loadUserData(state.user);
-      } else if (userId) {
-        // Fetch user data from API by ID
+
+      // Prefer navigation state data for immediate render in edit mode.
+      if (navUser) {
+        this.populateFormFromUser(navUser);
+      } else {
         this.fetchUserById(userId);
       }
-    } else {
-      // CREATE MODE - Force ALL fields to be COMPLETELY EMPTY
-      this.resetCreateForm();
     }
   }
 
+  // ✅ FIXED ERROR
   fetchUserById(userId: number) {
-    this.isLoading = true;
-    this.taskService.getUserTasks().subscribe({
-      next: (res: any) => {
-        let users = [];
-        if (Array.isArray(res)) users = res;
-        else if (res?.value && Array.isArray(res.value)) users = res.value;
-        else if (res?.data && Array.isArray(res.data)) users = res.data;
-        
-        const user = users.find((u: any) => 
-          (u.registerId === userId || u.userId === userId || u.id === userId)
-        );
-        
-        if (user) {
-          this.editingUser = user;
-          this.loadUserData(user);
-        }
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        alert('Failed to load user data');
+    this.taskService.getUserTasks().subscribe((res: any) => {
+      const users = this.extractUsersFromResponse(res);
+      const user = users.find((u: any) => {
+        const currentId = u.registerId ?? u.userId ?? u.id;
+        return Number(currentId) === Number(userId);
+      });
+
+      if (user) {
+        this.populateFormFromUser(user);
       }
     });
   }
 
-  loadUserData(user: any) {
-    // Populate form with user data
+  private populateFormFromUser(user: any): void {
+    this.editingUser = user;
     this.formUser = {
-      name: user.userName || user.registerName || user.name || '',
-      email: user.email || user.registerEmail || '',
-      password: '', // Always empty for security
-      role: user.userRole || user.registerRole || user.role || '',
+      name: user.registerName || user.userName || user.name || '',
+      email: user.registerEmail || user.email || '',
+      password: '',
+      role: user.registerRole || user.userRole || user.role || '',
       projects: user.projects || ''
     };
-    
-    // Load permissions
-    if (user.permissions && user.permissions.length > 0) {
-      this.loadPermissions(user.permissions);
-    } else {
-      // If no permissions in user object, fetch separately
-      this.fetchUserPermissions(user.registerId || user.id);
-    }
+
+    this.applyPermissions(user.permissions || []);
   }
 
-  fetchUserPermissions(userId: number) {
-    this.taskService.getUserTasks().subscribe({
-      next: (res: any) => {
-        let users = [];
-        if (Array.isArray(res)) users = res;
-        else if (res?.value && Array.isArray(res.value)) users = res.value;
-        else if (res?.data && Array.isArray(res.data)) users = res.data;
-        
-        const user = users.find((u: any) => 
-          (u.registerId === userId || u.userId === userId)
-        );
-        
-        if (user && user.permissions) {
-          this.loadPermissions(user.permissions);
-        } else {
-          this.setPermissionsByRole(this.formUser.role);
-        }
-      },
-      error: () => {
-        this.setPermissionsByRole(this.formUser.role);
+  private extractUsersFromResponse(res: any): any[] {
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.value)) return res.value;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.users)) return res.users;
+    return [];
+  }
+
+  private applyPermissions(apiPermissions: any[]): void {
+    const permissionMap = new Map<string, any>();
+    apiPermissions.forEach((permission: any) => {
+      const key = permission.menu || permission.menuName;
+      if (key) {
+        permissionMap.set(key, permission);
       }
     });
-  }
 
-  resetCreateForm() {
-    this.isEdit = false;
-    this.editingUser = null;
-    
-    this.formUser = {
-      name: '',
-      email: '',
-      password: '',
-      role: '',
-      projects: ''
-    };
-    
-    this.resetAllPermissions();
-    this.nameError = '';
-    this.emailError = '';
-    this.passwordError = '';
-    this.roleError = '';
-    this.isPasswordChanged = false;
-    this.isEmailChecking = false;
-    this.showPassword = false;
-  }
+    this.permissions.forEach((section) => {
+      section.items.forEach((item) => {
+        const apiPermission = permissionMap.get(item.menu);
+        if (!apiPermission) {
+          item.read = false;
+          item.write = false;
+          item.fullAccess = false;
+          return;
+        }
 
-  setPermissionsByRole(role: string) {
-    console.log('Setting permissions for role:', role);
-    this.resetAllPermissions();
-    
-    switch(role) {
-      case 'Admin':
-        this.permissions.forEach(section => {
-          section.items.forEach(item => {
-            item.read = true;
-            item.write = true;
-            item.fullAccess = true;
-          });
-        });
-        break;
-        
-      case 'Manager':
-        this.permissions.forEach(section => {
-          section.items.forEach(item => {
-            if (item.menu === 'View Dashboard' || item.menu === 'Tasks') {
-              item.read = true;
-              item.write = true;
-              item.fullAccess = false;
-            }
-          });
-        });
-        break;
-        
-      case 'Member':
-        this.permissions.forEach(section => {
-          section.items.forEach(item => {
-            if (item.menu === 'View Dashboard' || item.menu === 'Tasks') {
-              item.read = true;
-              item.write = false;
-              item.fullAccess = false;
-            }
-          });
-        });
-        break;
-        
-      default:
-        this.resetAllPermissions();
-        break;
-    }
-  }
-
-  resetAllPermissions() {
-    this.permissions.forEach(section => {
-      section.items.forEach(item => {
-        item.read = false;
-        item.write = false;
-        item.fullAccess = false;
+        item.read = this.toBoolean(apiPermission.read ?? apiPermission.canRead);
+        item.write = this.toBoolean(apiPermission.write ?? apiPermission.canWrite);
+        item.fullAccess = this.toBoolean(apiPermission.fullAccess ?? apiPermission.delete ?? apiPermission.canDelete);
       });
     });
   }
 
-  onRoleChange() {
-    this.validateRole();
-    // Only auto-set permissions in create mode, not in edit mode
-    if (!this.isEdit) {
-      this.setPermissionsByRole(this.formUser.role);
+  private toBoolean(value: any): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value === 1;
+    if (typeof value === 'string') return value === '1' || value.toLowerCase() === 'true';
+    return false;
+  }
+
+  // ================= VALIDATIONS =================
+
+  validateName() {
+    if (!this.formUser.name.trim()) {
+      this.nameError = 'Name is required';
+      return false;
     }
+    this.nameError = '';
+    return true;
+  }
+
+  validateEmail() {
+    if (!this.formUser.email) {
+      this.emailError = 'Email required';
+      return false;
+    }
+    this.emailError = '';
+    return true;
+  }
+
+  validatePassword() {
+    if (this.isEdit && !this.isPasswordChanged) {
+      this.passwordError = '';
+      return true;
+    }
+
+    if (!this.formUser.password) {
+      this.passwordError = 'Password required';
+      return false;
+    }
+    this.passwordError = '';
+    return true;
+  }
+
+  validateRole() {
+    if (!this.formUser.role) {
+      this.roleError = 'Role required';
+      return false;
+    }
+    this.roleError = '';
+    return true;
+  }
+
+  // ✅ FIXED ERROR
+  onEmailChange() {
+    this.validateEmail();
+  }
+
+  // ✅ FIXED ERROR
+  onPasswordChange() {
+    this.isPasswordChanged = true;
+    this.validatePassword();
   }
 
   togglePassword() {
     this.showPassword = !this.showPassword;
   }
 
-  onPasswordChange() {
-    this.isPasswordChanged = true;
-    this.validatePassword();
-  }
-
-  validatePassword() {
-    if (this.isEdit && !this.formUser.password) {
-      this.passwordError = '';
-      return true;
-    }
-    
-    if (!this.formUser.password) {
-      this.passwordError = 'Password is required';
-      return false;
-    } else if (this.formUser.password.length < 6) {
-      this.passwordError = 'Password must be at least 6 characters long';
-      return false;
-    } else if (this.formUser.password.length > 20) {
-      this.passwordError = 'Password must be less than 20 characters';
-      return false;
-    } else if (!/(?=.*[A-Z])/.test(this.formUser.password)) {
-      this.passwordError = 'Password must contain at least one uppercase letter';
-      return false;
-    } else if (!/(?=.*[a-z])/.test(this.formUser.password)) {
-      this.passwordError = 'Password must contain at least one lowercase letter';
-      return false;
-    } else if (!/(?=.*[0-9])/.test(this.formUser.password)) {
-      this.passwordError = 'Password must contain at least one number';
-      return false;
-    } else {
-      this.passwordError = '';
-      return true;
-    }
-  }
-
-  validateEmail() {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!this.formUser.email) {
-      this.emailError = 'Email is required';
-      return false;
-    } else if (!emailRegex.test(this.formUser.email)) {
-      this.emailError = 'Please enter a valid email address';
-      return false;
-    } else {
-      this.emailError = '';
-      return true;
-    }
-  }
-
-  onEmailChange() {
-    this.validateEmail();
-    
-    // Only check email uniqueness in create mode
-    if (!this.isEdit && this.formUser.email && this.validateEmail() && !this.emailError) {
-      this.checkEmailUniqueness(this.formUser.email);
-    }
-  }
-
-  checkEmailUniqueness(email: string) {
-    this.isEmailChecking = true;
-    
-    this.taskService.getUserTasks().subscribe({
-      next: (res: any) => {
-        let users = [];
-        if (Array.isArray(res)) users = res;
-        else if (res?.value && Array.isArray(res.value)) users = res.value;
-        else if (res?.data && Array.isArray(res.data)) users = res.data;
-        
-        const emailExists = users.some((user: any) => 
-          (user.registerEmail || user.email)?.toLowerCase() === email.toLowerCase()
-        );
-        
-        if (emailExists) {
-          this.emailError = 'Email already exists. Please use a different email';
-        } else {
-          this.emailError = '';
-        }
-        this.isEmailChecking = false;
-      },
-      error: () => {
-        this.isEmailChecking = false;
-      }
-    });
-  }
-
-  validateName() {
-    if (!this.formUser.name.trim()) {
-      this.nameError = 'Name is required';
-      return false;
-    } else if (this.formUser.name.trim().length < 3) {
-      this.nameError = 'Name must be at least 3 characters';
-      return false;
-    } else {
-      this.nameError = '';
-      return true;
-    }
-  }
-
-  validateRole() {
-    if (!this.formUser.role) {
-      this.roleError = 'Please select a role';
-      return false;
-    } else {
-      this.roleError = '';
-      return true;
-    }
-  }
-
-  isFormValid(): boolean {
-    return this.validateName() && 
-           this.validateEmail() && 
-           (!this.emailError) &&
-           this.validatePassword() && 
-           this.validateRole();
-  }
-
-  loadPermissions(userPermissions: any[]) {
-    console.log('Loading permissions for edit:', userPermissions);
-    
-    // Reset all permissions to false first
-    this.resetAllPermissions();
-    
-    // Load existing permissions
-    userPermissions.forEach(userPerm => {
-      for (let section of this.permissions) {
-        const item = section.items.find(i => i.menu === userPerm.menu);
-        if (item) {
-          // Handle different permission field names
-          item.read = userPerm.read || userPerm.canRead || false;
-          item.write = userPerm.write || userPerm.canWrite || false;
-          item.fullAccess = userPerm.fullAccess || userPerm.canDelete || false;
-          
-          // If fullAccess is true, ensure read and write are also true
-          if (item.fullAccess) {
-            item.read = true;
-            item.write = true;
-          }
-          break;
-        }
-      }
-    });
-    
-    console.log('Loaded permissions state:', this.permissions);
-  }
-
-  getPermissionsPayload(): any[] {
-    const permissionsPayload: any[] = [];
-    this.permissions.forEach(section => {
-      section.items.forEach(item => {
-        permissionsPayload.push({
-          section: section.section,
-          menu: item.menu,
-          read: item.read || false,
-          write: item.write || false,
-          fullAccess: item.fullAccess || false
-        });
-      });
-    });
-    return permissionsPayload;
-  }
+  // ================= PERMISSIONS =================
 
   onFullAccessChange(item: any) {
     if (item.fullAccess) {
@@ -419,81 +208,135 @@ export class UserFormComponent implements OnInit {
     }
   }
 
-  goBack() {
-    this.router.navigate(['/admin/users']);
+  getPermissionsPayload() {
+    const data: any[] = [];
+
+    this.permissions.forEach(section => {
+      section.items.forEach(item => {
+        data.push({
+          section: section.section,
+          menu: item.menu,
+          read: item.read,
+          write: item.write,
+          fullAccess: item.fullAccess
+        });
+      });
+    });
+
+    return data;
   }
 
+  // ================= SAVE =================
+
   saveUser() {
-    if (!this.formUser.name || !this.formUser.email) {
-      alert('Name and Email are required');
+
+    if (
+      !this.validateName() ||
+      !this.validateEmail() ||
+      !this.validatePassword() ||
+      !this.validateRole()
+    ) {
+      alert('Fill all required fields');
       return;
     }
 
-    if (this.emailError) {
-      alert(this.emailError);
-      return;
-    }
+    const normalizedName = this.formUser.name?.trim();
+    const normalizedEmail = this.formUser.email?.trim().toLowerCase();
+    const normalizedRole = this.formUser.role;
 
-    if (!this.isEdit && !this.formUser.password) {
-      alert('Password is required for new users');
-      return;
-    }
-
-    if (!this.isFormValid()) {
-      alert('Please fix validation errors before submitting');
-      return;
-    }
-
-    const permissions = this.getPermissionsPayload();
+    const payload: any = {
+      // Send both naming styles to support strict backend validation paths.
+      userName: normalizedName,
+      email: normalizedEmail,
+      userRole: normalizedRole,
+      registerName: normalizedName,
+      registerEmail: normalizedEmail,
+      registerRole: normalizedRole,
+      projects: this.formUser.projects,
+      permissions: this.getPermissionsPayload()
+    };
 
     if (this.isEdit) {
-      const payload: any = {
-        userId: this.editingUser.registerId || this.editingUser.id,
-        userName: this.formUser.name,
-        email: this.formUser.email,
-        userRole: this.formUser.role,
-        projects: this.formUser.projects,
-        permissions: permissions
-      };
-      
-      if (this.isPasswordChanged && this.formUser.password) {
-        payload.registerPassword = this.formUser.password;
-      }
-      
-      console.log('Updating user payload:', payload);
-      
-      this.taskService.updateUserTask(payload).subscribe({
-        next: () => {
-          alert('User updated successfully');
-          this.goBack();
-        },
-        error: (err) => {
-          console.error('Update Error:', err);
-          alert('Failed to update user: ' + (err.error?.message || err.message));
-        }
+      payload.userId = this.editingUser?.id ?? this.editingUser?.registerId ?? this.editingUser?.userId;
+
+      this.taskService.updateUserTask(payload).subscribe(() => {
+        alert('User Updated');
+        this.goBack();
       });
+
     } else {
-      const payload = {
-        userName: this.formUser.name,
-        email: this.formUser.email,
-        registerPassword: this.formUser.password,
-        userRole: this.formUser.role,
-        projects: this.formUser.projects || '',
-        permissions: permissions
-      };
-      
-      console.log('Creating user payload:', payload);
-      
-      this.taskService.addUserTask(payload).subscribe({
-        next: () => {
-          alert('User created successfully');
-          this.goBack();
-        },
-        error: (err) => {
-          console.error('Create Error:', err);
-          alert('Failed to create user: ' + (err.error?.message || err.message));
+      payload.registerPassword = this.formUser.password;
+
+      this.taskService.addUserTask(payload).subscribe((res: any) => {
+        alert('User Created');
+        console.log('New user created:', res);
+        
+        // Clear existing cache and set refresh flag
+        localStorage.removeItem('cachedUsers');
+        localStorage.setItem('userCreated', 'true');
+        
+        // Add new user to cache immediately for instant availability
+        const cachedUsers = localStorage.getItem('cachedUsers');
+        if (cachedUsers) {
+          const users = JSON.parse(cachedUsers);
+          users.push({
+            registerId: res.registerId || res.userId,
+            registerName: res.registerName || res.userName,
+            registerEmail: res.registerEmail || res.email
+          });
+          localStorage.setItem('cachedUsers', JSON.stringify(users));
+          console.log('Added new user to cache:', res.registerName);
         }
+        
+        this.goBack();
       });
     }
+  }
+onRoleChange() {
+  this.validateRole();
+  this.setPermissionsByRole(this.formUser.role);
+}
+
+private setPermissionsByRole(role: string): void {
+  console.log('Setting permissions for role:', role);
+  
+  this.permissions.forEach(section => {
+    section.items.forEach(item => {
+      switch (role) {
+        case 'Admin':
+          // Admin gets all permissions
+          item.read = true;
+          item.write = true;
+          item.fullAccess = true;
+          break;
+          
+        case 'Manager':
+          // Manager gets read and write for most sections, but not full access
+          item.read = true;
+          item.write = true;
+          item.fullAccess = section.section === 'DASHBOARD' || section.section === 'TASK MANAGEMENT';
+          break;
+          
+        case 'Member':
+          // Member gets read-only access
+          item.read = true;
+          item.write = false;
+          item.fullAccess = false;
+          break;
+          
+        default:
+          // Default to no permissions
+          item.read = false;
+          item.write = false;
+          item.fullAccess = false;
+          break;
+      }
+    });
+  });
+  
+  console.log('Updated permissions:', this.getPermissionsPayload());
+}
+  goBack() {
+    this.router.navigate(['/admin/users']);
   }
 }

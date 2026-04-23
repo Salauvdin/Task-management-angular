@@ -13,6 +13,7 @@ import { UserFormComponent } from './features/users/user-form';
 import { TeamsComponent } from './pages/teams/teams';
 // import { UnauthorizedComponent } from './pages/unauthorized/unauthorized';
 import { authGuard } from './guards/auth-guard';
+import { CreateTeamComponent } from './features/create-team/create-team';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -74,6 +75,12 @@ export const routes: Routes = [
         canActivate: [authGuard],
         data: { permission: { menu: 'Configuration', action: 'read' } }
       },
+      { 
+        path: 'create-team', 
+        component: CreateTeamComponent,
+        canActivate: [authGuard],
+        data: { permission: { menu: 'Team Management', action: 'write' } }
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
@@ -117,7 +124,7 @@ export const routes: Routes = [
   },
   
   // Redirect any unknown routes to login
-  { path: '**', redirectTo: 'login' }
+  // { path: '**', redirectTo: 'login' }
 ];
 
 @NgModule({

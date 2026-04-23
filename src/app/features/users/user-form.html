@@ -36,27 +36,22 @@
         <p *ngIf="emailError" class="text-red-400 text-xs mt-1">{{ emailError }}</p>
       </div>
 
-      <!-- Password -->
-      <div>
+      <!-- Password (only while creating user) -->
+      <div *ngIf="!isEdit">
         <label class="text-sm text-gray-400 mb-2 block">
           Password
-          <span *ngIf="isEdit" class="text-gray-500 text-xs">(Leave blank to keep current password)</span>
-          <span *ngIf="!isEdit" class="text-red-400">*</span>
+          <span class="text-red-400">*</span>
         </label>
         <div class="relative">
           <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="formUser.password"
             (ngModelChange)="onPasswordChange()"
-            [placeholder]="isEdit ? 'Enter new password to change' : 'Enter password'"
+            placeholder="Enter password"
             class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 pr-10 text-sm text-gray-200 placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all" />
           <button type="button" (click)="togglePassword()"
             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
             <i class="fa-solid" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
           </button>
         </div>
-        <small *ngIf="isEdit" class="text-blue-400 text-xs mt-1 block">
-          <i class="fa-solid fa-info-circle"></i>
-          Only fill this field if you want to change the password
-        </small>
         <div *ngIf="passwordError" class="text-red-400 text-xs mt-1">{{ passwordError }}</div>
       </div>
 

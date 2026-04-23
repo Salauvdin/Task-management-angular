@@ -163,7 +163,7 @@
               <span class="w-2 h-2 rounded-full bg-blue-400 group-hover:scale-150 transition-all duration-200"></span>
               {{ task.taskName }}
             </h3>
-            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+            <div class="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200">
               <!-- Edit Button - Using hasPermission directive -->
               <button
                 *hasPermission="{ menu: 'Tasks', action: 'write' }"
@@ -214,6 +214,15 @@
                 }"
               >
                 {{task.Priorty || task.priority || 'Medium'}}
+              </span>
+            </div>
+
+            <!-- ASSIGNED TO -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-400">Assigned To</span>
+              <span class="text-gray-300 flex items-center gap-1">
+                <i class="fa-solid fa-user text-gray-500"></i>
+                {{getAssignedUserName(task.assignedTo) || 'Unassigned'}}
               </span>
             </div>
 
@@ -276,6 +285,7 @@
                 <th class="p-4">Task Name</th>
                 <th class="p-4">Status</th>
                 <th class="p-4">Priority</th>
+                <th class="p-4">Assigned To</th>
                 <th class="p-4">Due Date</th>
                 <!-- Actions column - Using hasPermission directive to check if either write or delete permission exists -->
                 <th *hasPermission="{ menu: 'Tasks', action: 'write' }" class="p-4 text-center">Actions</th>
@@ -316,6 +326,10 @@
                   </span>
                 </td>
                 <td class="p-4 text-gray-300">
+                  <i class="fa-solid fa-user mr-2 text-gray-500"></i>
+                  {{getAssignedUserName(task.assignedTo) || 'Unassigned'}}
+                </td>
+                <td class="p-4 text-gray-300">
                   <i class="fa-regular fa-calendar mr-2 text-gray-500"></i>
                   {{(task.startDate || task.dueDate) | date:'mediumDate'}}
                 </td>
@@ -347,7 +361,7 @@
               
               <!-- Empty state for table -->
               <tr *ngIf="filteredTasks.length === 0">
-                <td colspan="5" class="p-12 text-center">
+                <td colspan="6" class="p-12 text-center">
                   <i class="fa-solid fa-clipboard-list text-4xl text-gray-600 mb-3"></i>
                   <p class="text-gray-400">No tasks found</p>
                   <button 

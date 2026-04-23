@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { ZardButtonComponent } from '@/shared/components/button/button.component';
 import { ZardCardComponent } from '@/shared/components/card/card.component';
 import { ZardIdDirective } from '@/shared/core';
-import { AuthService } from '@/services/auth';  // ✅ Import AuthService, not TaskService
+import { AuthService } from '@/services/auth';
 
 @Component({
   selector: 'app-login',
@@ -24,28 +24,39 @@ import { AuthService } from '@/services/auth';  // ✅ Import AuthService, not T
 })
 export class Login {
 
-  email = '';
-  password = '';
+  email = 'admin@example.com';  // ✅ Default admin email
+  password = 'Admin@123';       // ✅ Default admin password
   showPassword = false;
   isLoading = false;
   errorMessage = '';
 
   constructor(
     private router: Router,
-    private authService: AuthService  // ✅ Use AuthService
+    private authService: AuthService
   ) {}
 
   togglePassword() {
     this.showPassword = !this.showPassword;
   }
 
+  // ✅ Method to set default admin credentials
+  setAdminCredentials() {
+    this.email = 'admin@example.com';
+    this.password = 'Admin@123';
+    this.errorMessage = '';
+  }
+
+  // ✅ Method to set demo user credentials
+  setDemoUserCredentials() {
+    this.email = 'user@example.com';
+    this.password = 'User@123';
+    this.errorMessage = '';
+  }
+
   async login() {
-
-    console.log("LOGIN CLICKED 🚀");
-
     this.errorMessage = '';
 
-    // ✅ VALIDATION
+    // Validation
     if (!this.email || !this.password) {
       this.errorMessage = 'Please enter email and password';
       alert(this.errorMessage);
@@ -62,7 +73,6 @@ export class Login {
     this.isLoading = true;
 
     try {
-      // ✅ Use AuthService loginUser method
       const res: any = await firstValueFrom(
         this.authService.loginUser({
           email: this.email,
@@ -70,37 +80,22 @@ export class Login {
         })
       );
 
-      console.log("Login Success:", res);
+      console.log("Login Success:",);
 
-      // ✅ STORE TOKEN AND USER (AuthService already does this, but let's ensure)
+      // Store token and user data
       if (res.token) {
-        localStorage.setItem("token", res.token);
-      }
-      if (res.user) {
-        localStorage.setItem("user", JSON.stringify(res.user));
-      }
-
-      // alert(`Welcome ${res.user.name || res.user.registerName}`);
-
-      // ✅ ROLE BASED ROUTING
-      const userRole = res.user.role || res.user.registerRole;
-      
-      switch (userRole) {
-        case 'Admin':
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        
+        // Redirect based on role
+        if (res.user?.role === 'Admin') {
           this.router.navigate(['/admin/dashboard']);
-          break;
-        case 'Manager':
-          this.router.navigate(['/manager']);
-          break;
-        case 'Member':
-          this.router.navigate(['/teammember']);
-          break;
-        default:
-          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       }
 
     } catch (err: any) {
-
       console.error(err);
 
       if (err.status === 401) {

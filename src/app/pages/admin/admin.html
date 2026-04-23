@@ -1,11 +1,9 @@
-<div class="flex select-none max-h-fit min-w-fit rounded-xl">
-
-<app-sidebar></app-sidebar>
-
-<div class="flex-1">
-
-<router-outlet></router-outlet>
-
-</div>
-
+<div class="flex min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+  
+  <!-- Main Content -->
+  <div class="flex-1">
+    <router-outlet></router-outlet>
+  </div>
 </div>

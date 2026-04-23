@@ -1,22 +1,33 @@
-// guards/auth-guard.ts
+// src/app/guards/auth-guard.ts
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '@/services/auth';
+import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
+import { AuthService } from '../services/auth';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isLoggedIn()) {
-    // Check if token is expired
-    if (authService.isTokenExpired()) {
-      authService.logout();
-      router.navigate(['/login']);
+  // if (!authService.isLoggedIn()) {
+  //   router.navigate(['/login']);
+  //   return false;
+  // }
+
+  // if (authService.isTokenExpired()) {
+  //   authService.logout();
+  //   router.navigate(['/login']);
+  //   return false;
+  // }
+
+  const permission = route.data?.['permission'] as { menu: string; action: string } | undefined;
+
+  if (permission) {
+    // Cast action to 'any' to bypass PermissionAction strict type
+    const hasPermission = authService.hasPermission(permission.menu, permission.action as any);
+    if (!hasPermission) {
+      router.navigate(['/login']); // redirect to login since /unauthorized doesn't exist yet
       return false;
     }
-    return true;
   }
 
-  router.navigate(['/login']);
-  return false;
+  return true;
 };

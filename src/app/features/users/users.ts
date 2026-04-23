@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ZardAlertDialogService } from '@/shared/components/alert-dialog';
-import { TaskService } from '@/services/task';
+import { AuthService } from '@/services/auth';
+import { TaskService } from '@/services/taskServiceapi';
 
 @Component({
   selector: 'app-users',
@@ -16,11 +17,15 @@ export class Users implements OnInit {
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
 
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private authService: AuthService
+  ) {}
 
   users: any[] = [];
   filteredUsers: any[] = [];
   searchText: string = '';
+  allUsersMap: Map<number, string> = new Map();
 
   currentPage: number = 1;
   itemsPerPage: number = 5;
@@ -36,8 +41,22 @@ export class Users implements OnInit {
 
   openUserForm(user?: any) {
     if (user) {
-      // Use registerId as the ID since backend uses that
+      const loggedInUserId = this.authService.getLoggedInUserId();
+      const userRole = this.authService.getUserRole();
       const userId = user.registerId || user.id;
+      const createdBy = user.createdBy;
+      
+      if (userRole !== 'Admin' && Number(createdBy) !== loggedInUserId && Number(userId) !== loggedInUserId) {
+        this.alertDialogService.confirm({
+          zTitle: 'Access Denied',
+          zDescription: 'You do not have permission to edit this user',
+          zOkText: 'OK',
+          zCancelText: '',
+          zOnOk: () => {}
+        });
+        return;
+      }
+      
       this.router.navigate(['/admin/users/edit', userId], { state: { user } });
     } else {
       this.router.navigate(['/admin/users/create']);
@@ -47,14 +66,16 @@ export class Users implements OnInit {
   getAllUsers() {
     this.isLoading = true;
     this.errorMessage = '';
+    const loggedInUserId = this.authService.getLoggedInUserId();
+    
+    console.log('Current user - ID:', loggedInUserId, 'Role:', this.authService.getUserRole());
     
     this.taskService.getUserTasks().subscribe({
       next: (res: any) => {
-        console.log('API Response:', res); // Debug log
+        console.log('API Response:', res);
         
         let data = [];
         
-        // Handle different response structures
         if (Array.isArray(res)) {
           data = res;
         } else if (res?.value && Array.isArray(res.value)) {
@@ -64,15 +85,41 @@ export class Users implements OnInit {
         } else if (res?.users && Array.isArray(res.users)) {
           data = res.users;
         } else {
-          // If response is an object with keys, try to convert
           console.log('Unexpected response format:', res);
           data = [];
         }
         
-        console.log('Processed data:', data); // Debug log
+        console.log('All users from API:', data);
         
-        // Map the data to match the component's expected format
-        this.users = data.map((u: any) => ({
+        // Build map of user IDs to names
+        data.forEach((user: any) => {
+          const userId = user.registerId || user.userId || user.id;
+          const userName = user.registerName || user.userName || user.name;
+          if (userId && userName) {
+            this.allUsersMap.set(Number(userId), userName);
+          }
+        });
+        
+        let scopedData = data;
+        
+        // Show only self and users created by currently logged-in user.
+        if (loggedInUserId) {
+          scopedData = data.filter((u: any) => {
+            const registerId = u.registerId ?? u.userId ?? u.id;
+            const createdBy = u.createdBy ?? u.CreatedBy;
+            
+            const canAccess = Number(registerId) === Number(loggedInUserId) || 
+                             Number(createdBy) === Number(loggedInUserId);
+            
+            if (!canAccess) {
+              console.log(`User ${loggedInUserId} cannot access user ${registerId} (createdBy: ${createdBy})`);
+            }
+            return canAccess;
+          });
+        }
+        
+        // Map the data
+        this.users = scopedData.map((u: any) => ({
           id: u.registerId || u.userId || u._id || u.id,
           registerId: u.registerId,
           name: u.registerName || u.userName || u.name,
@@ -81,17 +128,16 @@ export class Users implements OnInit {
           role: u.registerRole || u.userRole || u.role,
           password: u.registerPassword,
           projects: u.projects || 'No projects',
+          createdBy: u.createdBy ?? u.CreatedBy ?? null,
           permissions: u.permissions || []
         }));
+        
+        console.log('Processed users:', this.users);
         
         this.filteredUsers = [...this.users];
         this.updatePagination();
         this.isLoading = false;
         this.cd.detectChanges();
-        
-        if (this.users.length === 0) {
-          console.log('No users found in response');
-        }
       },
       error: (err) => {
         console.error('GET Error:', err);
@@ -103,11 +149,46 @@ export class Users implements OnInit {
   }
 
   deleteUser(user: any) {
+    const loggedInUserId = this.authService.getLoggedInUserId();
+    const userRole = this.authService.getUserRole();
     const userId = user.registerId || user.id;
+    const createdBy = user.createdBy;
+    
+    // Check permission to delete
+    if (userRole !== 'Admin' && Number(createdBy) !== Number(loggedInUserId)) {
+      this.alertDialogService.confirm({
+        zTitle: 'Access Denied',
+        zDescription: 'You do not have permission to delete this user',
+        zOkText: 'OK',
+        zCancelText: '',
+        zOnOk: () => {}
+      });
+      return;
+    }
+    
+    // Prevent self-deletion
+    if (Number(userId) === Number(loggedInUserId)) {
+      this.alertDialogService.confirm({
+        zTitle: 'Cannot Delete',
+        zDescription: 'You cannot delete your own account',
+        zOkText: 'OK',
+        zCancelText: '',
+        zOnOk: () => {}
+      });
+      return;
+    }
+    
     this.taskService.deleteUserTask(userId).subscribe({
       next: () => {
         console.log('User deleted successfully');
-        this.getAllUsers(); // Refresh the list
+        this.alertDialogService.confirm({
+          zTitle: 'Success',
+          zDescription: 'User deleted successfully',
+          zOkText: 'OK',
+          zCancelText: '',
+          zOnOk: () => {}
+        });
+        this.getAllUsers();
       },
       error: (err) => {
         console.error('Delete Error:', err);
@@ -118,6 +199,21 @@ export class Users implements OnInit {
   }
 
   showDialog(user: any) {
+    const loggedInUserId = this.authService.getLoggedInUserId();
+    const userRole = this.authService.getUserRole();
+    const createdBy = user.createdBy;
+    
+    if (userRole !== 'Admin' && Number(createdBy) !== Number(loggedInUserId)) {
+      this.alertDialogService.confirm({
+        zTitle: 'Access Denied',
+        zDescription: 'You do not have permission to delete this user',
+        zOkText: 'OK',
+        zCancelText: '',
+        zOnOk: () => {}
+      });
+      return;
+    }
+    
     this.alertDialogService.confirm({
       zTitle: 'Delete User',
       zDescription: `Are you sure you want to delete "${user.name}"?`,
@@ -126,6 +222,12 @@ export class Users implements OnInit {
       zCustomClasses: 'delete-dialog',
       zOnOk: () => this.deleteUser(user)
     });
+  }
+
+  getCreatedByName(createdBy: number): string {
+    if (!createdBy) return 'System';
+    const name = this.allUsersMap.get(Number(createdBy));
+    return name || `User ID: ${createdBy}`;
   }
 
   filterUsers() {
