@@ -1,0 +1,373 @@
+/* Team Member Component Styles */
+
+.team-member-container {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Header Styles */
+.team-member-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Add Member Section */
+.add-member-section {
+  margin-bottom: 1.5rem;
+}
+
+.member-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: rgba(243, 244, 246, 0.9);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.member-input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.member-input.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.role-select {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: rgba(243, 244, 246, 0.9);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-button {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: rgba(147, 197, 253, 0.9);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.add-button:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Error Message */
+.error-message {
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Member List */
+.member-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.member-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.member-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.member-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.member-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  animation: pulse 3s infinite;
+}
+
+/* Member Item */
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+  animation: slideIn 0.3s ease-out;
+}
+
+.member-item:hover {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.member-item.last-member {
+  margin-bottom: 0;
+}
+
+/* Member Avatar */
+.member-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(243, 244, 246, 0.9);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.member-item:hover .avatar-circle {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.8);
+}
+
+.status-indicator.online {
+  background: rgba(34, 197, 94, 0.9);
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.offline {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Member Info */
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-name {
+  color: rgba(243, 244, 246, 0.9);
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-email {
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-role,
+.member-added {
+  color: rgba(148, 163, 184, 0.5);
+  font-size: 0.625rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.125rem;
+}
+
+/* Member Actions */
+.member-actions {
+  flex-shrink: 0;
+}
+
+.remove-button {
+  background: transparent;
+  border: none;
+  color: rgba(248, 113, 113, 0.7);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-button:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgba(248, 113, 113, 0.9);
+  transform: scale(1.1);
+}
+
+/* Footer */
+.member-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .team-member-container {
+    padding: 1rem;
+  }
+  
+  .member-item {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .avatar-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 0.75rem;
+  }
+  
+  .member-name {
+    font-size: 0.8125rem;
+  }
+  
+  .member-email {
+    font-size: 0.6875rem;
+  }
+  
+  .role-select {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-member-section .flex.gap-3 {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .role-select {
+    width: 100%;
+  }
+  
+  .member-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .member-actions {
+    align-self: flex-end;
+  }
+}
+
+/* Accessibility */
+.add-button:focus-visible,
+.remove-button:focus-visible,
+.member-input:focus-visible,
+.role-select:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .team-member-container {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .member-item {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .member-input,
+  .role-select {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,133 @@
+<div class="team-member-container">
+  <!-- Header with member count -->
+  <div class="team-member-header">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-users text-blue-400"></i>
+        <h3 class="text-white font-medium">Team Members</h3>
+        <span class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg text-xs">
+          {{ getMemberCount() }} member{{ getMemberCount() !== 1 ? 's' : '' }}
+        </span>
+      </div>
+      
+      <div *ngIf="!readonly" class="text-xs text-gray-400">
+        <i class="fa-solid fa-info-circle mr-1"></i>
+        Press Enter to add member
+      </div>
+    </div>
+
+    <!-- Add Member Input -->
+    <div *ngIf="!readonly" class="add-member-section">
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <input
+            type="email"
+            [(ngModel)]="newMemberEmail"
+            name="memberEmail"
+            placeholder="Enter member email address..."
+            (input)="onEmailChange()"
+            (keyup)="onKeyUp($event)"
+            class="member-input"
+            [class.error]="emailError"
+          />
+          <div *ngIf="emailError" class="error-message">
+            <i class="fa-solid fa-exclamation-circle text-xs"></i>
+            {{ emailError }}
+          </div>
+        </div>
+        
+        <div *ngIf="showRoles" class="role-select">
+          <select
+            [(ngModel)]="newMemberRole"
+            name="memberRole"
+            class="role-dropdown"
+          >
+            <option *ngFor="let role of availableRoles" [value]="role.value">
+              {{ role.label }}
+            </option>
+          </select>
+        </div>
+        
+        <button
+          type="button"
+          (click)="addMember()"
+          [disabled]="!newMemberEmail.trim() || emailError"
+          class="add-button"
+          title="Add member"
+        >
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member List -->
+  <div class="member-list">
+    <!-- Empty State -->
+    <div *ngIf="members.length === 0" class="empty-state">
+      <i class="fa-solid fa-user-plus text-4xl text-gray-600 mb-3"></i>
+      <p class="text-gray-400 text-sm">No team members added yet</p>
+      <p *ngIf="!readonly" class="text-gray-500 text-xs mt-1">
+        Add members using the field above
+      </p>
+    </div>
+
+    <!-- Member Items -->
+    <div 
+      *ngFor="let member of members; trackBy: trackByMemberId" 
+      class="member-item"
+      [class.last-member]="isLastMember(member)"
+    >
+      <div class="member-avatar">
+        <div class="avatar-circle">
+          {{ getMemberInitials(member.name, member.email) }}
+        </div>
+        <div *ngIf="member.isValid" class="status-indicator online"></div>
+        <div *ngIf="!member.isValid" class="status-indicator offline"></div>
+      </div>
+      
+      <div class="member-info">
+        <div class="member-name">
+          {{ member.name || member.email }}
+        </div>
+        <div class="member-email">
+          {{ member.email }}
+        </div>
+        <div *ngIf="showRoles && member.role" class="member-role">
+          <i class="fa-solid fa-badge text-xs mr-1"></i>
+          {{ getRoleDisplay(member.role) }}
+        </div>
+        <div *ngIf="member.addedAt" class="member-added">
+          <i class="fa-solid fa-clock text-xs mr-1"></i>
+          Added {{ member.addedAt | date:'short' }}
+        </div>
+      </div>
+      
+      <div class="member-actions">
+        <button
+          *ngIf="!readonly"
+          type="button"
+          (click)="removeMember(member, $event)"
+          class="remove-button"
+          title="Remove member"
+        >
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer with stats -->
+  <div *ngIf="members.length > 0" class="member-footer">
+    <div class="flex items-center justify-between text-xs text-gray-400">
+      <span>
+        <i class="fa-solid fa-check-circle text-green-400 mr-1"></i>
+        {{ getValidMemberCount() }} valid member{{ getValidMemberCount() !== 1 ? 's' : '' }}
+      </span>
+      <span *ngIf="getMemberCount() !== getValidMemberCount()">
+        <i class="fa-solid fa-exclamation-triangle text-yellow-400 mr-1"></i>
+        {{ getMemberCount() - getValidMemberCount() }} invalid
+      </span>
+    </div>
+  </div>
+</div>
