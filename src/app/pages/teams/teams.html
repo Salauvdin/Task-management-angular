@@ -1,0 +1,185 @@
+<div class="teams-container">
+  <!-- Header -->
+  <div class="teams-header">
+    <div class="header-content">
+      <h1 class="page-title">Teams Management</h1>
+      <p class="page-subtitle">Manage your teams and team members</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fa-solid fa-plus"></i>
+      Create Team
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Loading teams...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <div class="error-content">
+      <i class="fa-solid fa-exclamation-triangle"></i>
+      <p>{{ error }}</p>
+      <button class="btn btn-secondary" (click)="loadTeams()">Retry</button>
+    </div>
+  </div>
+
+  <!-- Teams Grid -->
+  <div *ngIf="!loading && !error" class="teams-grid">
+    <div *ngIf="teams.length === 0" class="empty-state">
+      <div class="empty-content">
+        <i class="fa-solid fa-users"></i>
+        <h3>No Teams Found</h3>
+        <p>Create your first team to get started</p>
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fa-solid fa-plus"></i>
+          Create Team
+        </button>
+      </div>
+    </div>
+
+    <div *ngFor="let team of teams" class="team-card" (click)="viewTeamDetails(team)">
+      <div class="team-header">
+        <div class="team-info">
+          <h3 class="team-name">{{ team.name }}</h3>
+          <p class="team-meta">
+            <span class="task-count">{{ getTeamStats(team).taskCount }} tasks</span>
+            <span class="created-date">Created {{ getTeamStats(team).createdAt }}</span>
+          </p>
+        </div>
+        <div class="team-actions" (click)="$event.stopPropagation()">
+          <button class="btn-icon" title="View Details">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+          <button class="btn-icon" title="Delete Team" (click)="deleteTeam(team.id)">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="team-stats">
+        <div class="stat-item">
+          <i class="fa-solid fa-tasks"></i>
+          <span>{{ getTeamStats(team).taskCount }}</span>
+          <small>Tasks</small>
+        </div>
+        <div class="stat-item">
+          <i class="fa-solid fa-users"></i>
+          <span>--</span>
+          <small>Members</small>
+        </div>
+        <div class="stat-item">
+          <i class="fa-solid fa-calendar"></i>
+          <span>{{ getTeamStats(team).createdAt }}</span>
+          <small>Created</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Team Modal -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Team</h2>
+      <button class="btn-close" (click)="closeCreateModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="teamName">Team Name *</label>
+        <input 
+          id="teamName"
+          type="text" 
+          class="form-control" 
+          #teamNameInput
+          placeholder="Enter team name"
+        >
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="createTeamWithName(teamNameInput.value)">
+          <i class="fa-solid fa-plus"></i>
+          Create Team
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Team Details Modal -->
+<div *ngIf="showTeamDetails && selectedTeam" class="modal-overlay" (click)="closeTeamDetails()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedTeam.name }}</h2>
+      <button class="btn-close" (click)="closeTeamDetails()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="team-details">
+        <div class="detail-section">
+          <h3>Team Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Team Name:</label>
+              <span>{{ selectedTeam.name }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Created Date:</label>
+              <span>{{ getTeamStats(selectedTeam).createdAt }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Total Tasks:</label>
+              <span>{{ getTeamStats(selectedTeam).taskCount }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>Team Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <i class="fa-solid fa-tasks"></i>
+              <div class="stat-info">
+                <h4>{{ getTeamStats(selectedTeam).taskCount }}</h4>
+                <p>Total Tasks</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fa-solid fa-users"></i>
+              <div class="stat-info">
+                <h4>--</h4>
+                <p>Team Members</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fa-solid fa-calendar"></i>
+              <div class="stat-info">
+                <h4>{{ getTeamStats(selectedTeam).createdAt }}</h4>
+                <p>Created On</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeTeamDetails()">Close</button>
+      <button class="btn btn-primary">
+        <i class="fa-solid fa-edit"></i>
+        Edit Team
+      </button>
+    </div>
+  </div>
+</div>

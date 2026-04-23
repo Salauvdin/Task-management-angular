@@ -47,6 +47,13 @@ export class SidebarComponent implements OnInit {
       menuName: 'User Management'
     },
     { 
+      path: '/admin/teams', 
+      icon: 'fa-solid fa-users-gear', 
+      label: 'Teams',
+      color: 'blue',
+      menuName: 'Teams'
+    },
+    { 
       path: '/admin/configuration', 
       icon: 'fa-solid fa-gear', 
       label: 'Configuration',
@@ -80,6 +87,11 @@ export class SidebarComponent implements OnInit {
 
   filterMenuItems() {
     this.visibleMenuItems = this.menuItems.filter(item => {
+      // Show Teams without permission check for now
+      if (item.menuName === 'Teams') {
+        console.log(`Menu ${item.label}: Teams - showing without permission check`);
+        return true;
+      }
       const hasAccess = this.authService.hasPermission(item.menuName, 'read');
       console.log(`Menu ${item.label}: hasPermission = ${hasAccess}`);
       return hasAccess;

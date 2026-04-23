@@ -10,6 +10,7 @@ import { Reports } from './confiq/reports/reports';
 import { Users } from './features/users/users';
 import { ConfigurationComponents } from './confiq/configuration.compoents/configuration.compoents';
 import { UserFormComponent } from './features/users/user-form';
+import { TeamsComponent } from './pages/teams/teams';
 // import { UnauthorizedComponent } from './pages/unauthorized/unauthorized';
 import { authGuard } from './guards/auth-guard';
 
@@ -48,6 +49,12 @@ export const routes: Routes = [
         component: Users,
         canActivate: [authGuard],
         data: { permission: { menu: 'User Management', action: 'read' } }
+      },
+      { 
+        path: 'teams', 
+        component: TeamsComponent,
+        canActivate: [authGuard],
+        data: { permission: { menu: 'Teams', action: 'read' } }
       },
       { 
         path: 'users/create', 
