@@ -92,27 +92,27 @@ export class CreateTeamComponent implements OnInit {
 
   validateMemberEmail(): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!this.memberEmail.trim()) {
       this.memberEmailError = '';
       return true; // Empty email is ok (just don't add member)
     }
-    
+
     if (!emailRegex.test(this.memberEmail)) {
       this.memberEmailError = 'Please enter a valid email address';
       return false;
     }
-    
+
     // Check for duplicate emails
     const isDuplicate = this.teamForm.members.some(
       member => member.email.toLowerCase() === this.memberEmail.toLowerCase().trim()
     );
-    
+
     if (isDuplicate) {
       this.memberEmailError = 'This email is already added to the team';
       return false;
     }
-    
+
     this.memberEmailError = '';
     return true;
   }
@@ -181,7 +181,7 @@ export class CreateTeamComponent implements OnInit {
     const isDescriptionValid = this.validateTeamDescription();
 
     if (!isNameValid || !isDescriptionValid) {
-      this.errorMessage = 'Please fix the validation errors before creating the team';
+      this.errorMessage = 'Please fix the validation errors before creating a team';
       return;
     }
 
@@ -202,41 +202,24 @@ export class CreateTeamComponent implements OnInit {
 
     console.log('Creating team with payload:', teamPayload);
 
-    // Simulate API call (replace with actual API endpoint)
-    setTimeout(() => {
-      this.isLoading = false;
-      
-      // Mock success response
-      this.successMessage = `Team "${this.teamForm.name}" created successfully with ${this.teamForm.members.length} member(s)!`;
-      
-      // Reset form after successful creation
-      setTimeout(() => {
-        this.resetForm();
-        this.goBack();
-      }, 2000);
-      
-    }, 1500);
+    // Use actual TaskService API
+    // this.taskService.createTeam(teamPayload).subscribe({
+    //   next: (response) => {
+    //     this.isLoading = false;
+    //     this.successMessage = `Team "${this.teamForm.name}" created successfully!`;
+    //     console.log('Team created:', response);
 
-    // Uncomment when actual API is available:
-    /*
-    this.taskService.createTeam(teamPayload).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        this.successMessage = `Team "${this.teamForm.name}" created successfully!`;
-        console.log('Team created:', response);
-        
-        setTimeout(() => {
-          this.resetForm();
-          this.goBack();
-        }, 2000);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to create team. Please try again.';
-        console.error('Team creation error:', error);
-      }
-    });
-    */
+    //     setTimeout(() => {
+    //       this.resetForm();
+    //       this.goBack();
+    //     }, 2000);
+    //   },
+    //   error: (error) => {
+    //     this.isLoading = false;
+    //     this.errorMessage = error.error?.message || 'Failed to create team. Please try again.';
+    //     console.error('Team creation error:', error);
+    //   }
+    // });
   }
 
   // Reset form
@@ -261,10 +244,10 @@ export class CreateTeamComponent implements OnInit {
   // Check if form is valid for submission
   get isFormValid(): boolean {
     return this.teamForm.name.trim().length >= 3 &&
-           this.teamForm.description.trim().length >= 10 &&
-           this.teamForm.members.length > 0 &&
-           !this.nameError &&
-           !this.descriptionError &&
-           !this.memberEmailError;
+      this.teamForm.description.trim().length >= 10 &&
+      this.teamForm.members.length > 0 &&
+      !this.nameError &&
+      !this.descriptionError &&
+      !this.memberEmailError;
   }
 }

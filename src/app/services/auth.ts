@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { TimezoneService } from './timezone.service';
+import { TenantService } from './tenant.service';
 
 
 // Define permission action type
@@ -50,7 +52,9 @@ export class AuthService {
 // }
   constructor(
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private timezoneService: TimezoneService,
+    private tenantService: TenantService
   ) {
     this.restoreAuthState();
   }
@@ -182,6 +186,11 @@ export class AuthService {
     return user?.role || user?.registerRole || 'Member';
   }
 
+  isSuperAdmin(): boolean {
+    const role = this.getUserRole();
+    return role === 'Super Admin' || role === 'Admin';
+  }
+
   // Navigate based on user role
   private navigateByRole(role: string) {
     switch (role) {
@@ -256,6 +265,12 @@ export class AuthService {
         const user = JSON.parse(savedUser);
         this.currentUserSubject.next(user);
         this.userPermissionsSubject.next(user.permissions || []);
+        
+        // Sync timezone from restored user
+        const timezone = (user as any).timezone || (user as any).registerTimezone;
+        if (timezone) {
+          this.timezoneService.setUserTimezone(timezone);
+        }
       } catch (error) {
         this.clearAuthState();
       }
@@ -275,6 +290,18 @@ export class AuthService {
 
     this.currentUserSubject.next(user);
     this.userPermissionsSubject.next(user.permissions || []);
+    
+    // Sync timezone if available in user object
+    const timezone = (user as any).timezone || (user as any).registerTimezone;
+    if (timezone) {
+      this.timezoneService.setUserTimezone(timezone);
+    }
+
+    // Set tenant ID if available
+    const tenantId = (user as any).tenantId || (user as any).registerTenantId;
+    if (tenantId) {
+      this.tenantService.setTenantId(tenantId);
+    }
   }
 
   private clearAuthState(): void {
@@ -283,6 +310,8 @@ export class AuthService {
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
       localStorage.removeItem('user');
+      localStorage.removeItem('selectedTenantId');
     }
+    this.tenantService.setTenantId(0);
   }
 }

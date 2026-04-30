@@ -1,10 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ZardAlertDialogService } from '@/shared/components/alert-dialog';
 import { AuthService } from '@/services/auth';
 import { TaskService } from '@/services/taskServiceapi';
+import { TimezoneService } from '@/services/timezone.service';
 
 @Component({
   selector: 'app-users',
@@ -12,14 +14,16 @@ import { TaskService } from '@/services/taskServiceapi';
   imports: [CommonModule, FormsModule],
   templateUrl: './users.html',
 })
-export class Users implements OnInit {
+export class Users implements OnInit, OnDestroy {
+  private timezoneSubscription?: Subscription;
   private alertDialogService = inject(ZardAlertDialogService);
   private cd = inject(ChangeDetectorRef);
   private router = inject(Router);
 
   constructor(
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    public timezoneService: TimezoneService
   ) {}
 
   users: any[] = [];
@@ -37,6 +41,16 @@ export class Users implements OnInit {
 
   ngOnInit() {
     this.getAllUsers();
+    
+    // Listen for timezone changes
+    this.timezoneSubscription = this.timezoneService.timezone$.subscribe(() => {
+      console.log('Timezone changed, refreshing User UI');
+      this.cd.detectChanges();
+    });
+  }
+
+  ngOnDestroy() {
+    this.timezoneSubscription?.unsubscribe();
   }
 
   openUserForm(user?: any) {
@@ -126,9 +140,11 @@ export class Users implements OnInit {
           userName: u.registerName || u.userName,
           email: u.registerEmail || u.email,
           role: u.registerRole || u.userRole || u.role,
+          timezone: u.timezone || 'IST',
           password: u.registerPassword,
           projects: u.projects || 'No projects',
           createdBy: u.createdBy ?? u.CreatedBy ?? null,
+          createdAt: u.createdAt || u.created_at || u.Createdat || u.createdat || u.CreatedAt || null,
           permissions: u.permissions || []
         }));
         
@@ -295,5 +311,15 @@ export class Users implements OnInit {
   
   refreshUsers() {
     this.getAllUsers();
+  }
+
+  // Format created date according to user's timezone
+  formatCreatedDate(date: string | Date): string {
+    return this.timezoneService.formatDateTime(date);
+  }
+
+  // Format created date only (without time) according to user's timezone
+  formatCreatedDateOnly(date: string | Date): string {
+    return this.timezoneService.formatDateOnly(date);
   }
 }

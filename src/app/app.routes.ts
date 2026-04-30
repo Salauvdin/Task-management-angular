@@ -14,6 +14,8 @@ import { TeamsComponent } from './pages/teams/teams';
 // import { UnauthorizedComponent } from './pages/unauthorized/unauthorized';
 import { authGuard } from './guards/auth-guard';
 import { CreateTeamComponent } from './features/create-team/create-team';
+import { UserProfileComponent } from './pages/profile/user-profile';
+import { TenantsComponent } from './pages/tenants/tenants';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -25,8 +27,8 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: Admin,
-    canActivate: [authGuard],
-    children: [
+      canActivate: [authGuard],
+      children: [
       { 
         path: 'dashboard', 
         component: Dashboard,
@@ -54,8 +56,8 @@ export const routes: Routes = [
       { 
         path: 'teams', 
         component: TeamsComponent,
-        canActivate: [authGuard],
-        data: { permission: { menu: 'Teams', action: 'read' } }
+        canActivate: [authGuard]
+        // Temporarily removed permission requirement
       },
       { 
         path: 'users/create', 
@@ -72,6 +74,12 @@ export const routes: Routes = [
       { 
         path: 'configuration', 
         component: ConfigurationComponents,
+        canActivate: [authGuard],
+        data: { permission: { menu: 'Configuration', action: 'read' } }
+      },
+      { 
+        path: 'tenants', 
+        component: TenantsComponent,
         canActivate: [authGuard],
         data: { permission: { menu: 'Configuration', action: 'read' } }
       },

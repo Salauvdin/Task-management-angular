@@ -1,80 +1,103 @@
 <div
   class="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] border-r border-indigo-500/20 h-screen flex flex-col flex-shrink-0 sticky top-0 transition-all duration-500 select-none shadow-2xl relative"
-  [ngClass]="collapsed ? 'w-20' : 'w-64'"
->
-  <div class="absolute inset-0 bg-gradient-to-t from-indigo-500/10 via-transparent to-transparent pointer-events-none"></div>
-  
+  [ngClass]="collapsed ? 'w-20' : 'w-64'">
+  <div class="absolute inset-0 bg-gradient-to-t from-indigo-500/10 via-transparent to-transparent pointer-events-none">
+  </div>
+
   <div class="relative z-10 flex flex-col h-full">
-    
+
     <!-- TOP Section -->
     <div class="p-5 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3" *ngIf="!collapsed">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
             <i class="fa-solid fa-crown text-white text-sm"></i>
           </div>
           <span class="text-white text-xl font-bold">Admin Panel</span>
         </div>
-        
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-600/30" *ngIf="collapsed">
+
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-600/30"
+          *ngIf="collapsed">
           <i class="fa-solid fa-crown text-white text-sm"></i>
         </div>
-        
+
         <div class="flex items-center gap-2">
           <!-- Notification Icon -->
-          <button
-            (click)="onBellIconClick()"
+          <button (click)="onBellIconClick()"
             class="text-indigo-300 hover:text-white transition-all duration-300 hover:bg-indigo-600/20 w-10 h-10 rounded-xl flex items-center justify-center relative"
-            title="Notifications"
-          >
+            title="Notifications">
             <i class="fa-solid fa-bell"></i>
             <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-indigo-900"></span>
           </button>
-          
+
           <!-- Toggle Button -->
-          <button
-            (click)="toggleSidebar()"
+          <button (click)="toggleSidebar()"
             class="text-indigo-300 hover:text-white transition-all duration-300 hover:bg-indigo-600/20 w-10 h-10 rounded-xl flex items-center justify-center"
-            [ngClass]="collapsed ? 'rotate-180' : ''"
-          >
+            [ngClass]="collapsed ? 'rotate-180' : ''">
             <i class="fa-solid fa-bars"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Navigation Menu - ALL MENUS VISIBLE -->
+    <!-- Tenant Switcher (Super Admin Only) -->
+    <div class="tenant-switcher-container" *ngIf="!collapsed && isSuperAdmin()">
+      <label>Select Tenant</label>
+      <div class="custom-select-wrapper">
+        <select (change)="onTenantChange($event)" [value]="selectedTenantId" class="custom-select">
+          <option [value]="0">All Tenants</option>
+          <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.name }}</option>
+        </select>
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400">
+          <i class="fa-solid fa-chevron-down text-[10px]"></i>
+        </div>
+      </div>
+      <div class="active-tenant-indicator" *ngIf="selectedTenantId !== 0">
+        <div class="tenant-dot"></div>
+        <span class="active-tenant-name">Active: {{ activeTenantName }}</span>
+      </div>
+    </div>
+
+    <!-- Collapsed Tenant Icon -->
+    <div *ngIf="collapsed && isSuperAdmin() && selectedTenantId !== 0" class="flex justify-center mb-4">
+      <div class="relative group">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <i class="fa-solid fa-building text-sm"></i>
+          <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full shadow-[0_0_8px_#4ade80]"></div>
+        </div>
+        <span class="absolute left-full ml-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+          Tenant: {{ activeTenantName }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
     <div class="flex-1 overflow-y-auto scrollbar-hide px-3 py-2">
       <nav class="space-y-1.5">
-        <!-- Loop through ALL menu items (no permission filter) -->
         <ng-container *ngFor="let item of visibleMenuItems">
-          <a
-            [routerLink]="item.path"
+          <a [routerLink]="item.path"
             routerLinkActive="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-600/30"
             [routerLinkActiveOptions]="{ exact: true }"
             class="flex items-center gap-3 p-3 rounded-xl text-indigo-200/80 hover:bg-indigo-500/20 hover:text-white transition-all duration-200 group relative"
-            [class.justify-center]="collapsed"
-          >
+            [class.justify-center]="collapsed">
             <i [class]="item.icon + ' text-lg w-5'"></i>
             <span *ngIf="!collapsed" class="font-medium">{{ item.label }}</span>
-            <span
-              *ngIf="collapsed"
-              class="absolute left-full ml-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg"
-            >
+            <span *ngIf="collapsed"
+              class="absolute left-full ml-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
               {{ item.label }}
             </span>
           </a>
         </ng-container>
       </nav>
     </div>
-    
-    <!-- LOGOUT BUTTON (Always visible) -->
+
+    <!-- LOGOUT BUTTON -->
     <div class="flex-shrink-0 border-t border-indigo-500/20 pt-4 pb-4">
       <div *ngIf="!collapsed" class="px-3">
-        <button
-          (click)="logout()"
-          class="w-full flex items-center gap-3 p-3 rounded-xl text-red-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 group"
-        >
+        <button (click)="logout()"
+          class="w-full flex items-center gap-3 p-3 rounded-xl text-red-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 group">
           <i class="fa-solid fa-sign-out-alt text-lg text-red-400 w-5"></i>
           <span class="font-medium">Logout</span>
         </button>
@@ -82,29 +105,29 @@
 
       <div *ngIf="collapsed" class="flex justify-center">
         <div class="relative group">
-          <button
-            (click)="logout()"
-            class="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-white transition-all duration-200 flex items-center justify-center"
-          >
+          <button (click)="logout()"
+            class="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-white transition-all duration-200 flex items-center justify-center">
             <i class="fa-solid fa-sign-out-alt text-lg"></i>
           </button>
-          <span class="absolute left-full ml-2 bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+          <span
+            class="absolute left-full ml-2 bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
             Logout
           </span>
         </div>
       </div>
     </div>
 
-    <!-- User Profile Section (Always visible) -->
+    <!-- User Profile Section -->
     <div class="p-4 flex-shrink-0 border-t border-indigo-500/20">
       <div *ngIf="!collapsed" class="space-y-3">
         <div class="flex items-center gap-2 text-xs text-indigo-300/50">
           <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
           <span>System Online</span>
         </div>
-        
+
         <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-all duration-200">
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
+          <div
+            class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center">
             <i class="fa-solid fa-user text-white text-sm"></i>
           </div>
           <div class="flex-1 min-w-0">
@@ -115,7 +138,7 @@
             </p>
           </div>
         </div>
-        
+
         <div class="text-[10px] text-indigo-300/30 text-center">
           v2.0.0 • Enterprise
         </div>
@@ -125,16 +148,18 @@
         <div class="flex justify-center">
           <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
         </div>
-        
+
         <div class="relative group flex justify-center">
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center cursor-pointer">
+          <div
+            class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center cursor-pointer">
             <i class="fa-solid fa-user text-white text-sm"></i>
           </div>
-          <span class="absolute left-full ml-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+          <span
+            class="absolute left-full ml-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
             {{ getCurrentUserName() }}
           </span>
         </div>
-        
+
         <div class="text-[10px] text-indigo-300/30 text-center">
           v2.0.0 • Enterprise
         </div>
@@ -152,24 +177,24 @@
           <i class="fa-solid fa-times"></i>
         </button>
       </div>
-      
+
       <div class="notification-content">
         <div *ngIf="notificationError" class="notification-error">
           <i class="fa-solid fa-exclamation-triangle"></i>
           {{ notificationError }}
         </div>
-        
+
         <div *ngIf="isLoadingNotifications" class="loading-notifications">
           <i class="fa-solid fa-spinner fa-spin"></i>
           <p>Loading notifications...</p>
         </div>
-        
+
         <div *ngIf="!notificationError && !isLoadingNotifications">
           <div *ngIf="notifications.length === 0" class="no-notifications">
             <i class="fa-solid fa-bell-slash"></i>
             <p>No notifications</p>
           </div>
-          
+
           <div *ngFor="let notification of notifications; trackBy: trackByNotificationId" class="notification-item">
             <div class="notification-icon">
               <i class="fa-solid fa-bell"></i>

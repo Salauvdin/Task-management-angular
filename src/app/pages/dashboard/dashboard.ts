@@ -4,6 +4,8 @@ import { Chart, registerables } from 'chart.js';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@/services/auth';
 import { HasPermissionDirective } from '@/directives/has-permission';
+import { TaskService } from '@/services/taskServiceapi';
+import { TenantService } from '@/services/tenant.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,52 +21,89 @@ export class Dashboard implements OnInit, AfterViewInit {
   pieChart!: Chart;
   barChart!: Chart;
   canViewDashboard = false;
+  loading = false;
 
-  recentTasks = [
-    { name: 'Design Landing Page', assignedTo: 'Alice', priority: 'High', status: 'In Progress', date: '2026-03-16' },
-    { name: 'Setup API', assignedTo: 'Bob', priority: 'Medium', status: 'Pending', date: '2026-03-18' },
-    { name: 'Fix Bug #234', assignedTo: 'Charlie', priority: 'High', status: 'Completed', date: '2026-03-14' },
-    { name: 'Write Documentation', assignedTo: 'Diana', priority: 'Low', status: 'Pending', date: '2026-03-20' }
-  ];
+  recentTasks: any[] = [];
 
   stats = {
-    totalTasks: 43,
-    completedTasks: 28,
-    pendingTasks: 15,
-    inProgressTasks: 12
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0,
+    inProgressTasks: 0
   };
 
-  // Make authService public by removing 'private' keyword
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    public authService: AuthService  // Changed from private to public
+    public authService: AuthService,
+    private taskService: TaskService,
+    private tenantService: TenantService
   ) {
     Chart.register(...registerables);
   }
 
   ngOnInit() {
     this.canViewDashboard = this.authService.hasPermission('View Dashboard', 'read');
+    if (this.canViewDashboard) {
+      this.tenantService.selectedTenantId$.subscribe(id => {
+        this.fetchDashboardData();
+      });
+    }
   }
 
   ngAfterViewInit(): void {
     if (!this.canViewDashboard) return;
     if (!isPlatformBrowser(this.platformId)) return;
     this.initCharts();
+    this.fetchDashboardData(); // ensure data is loaded into charts if they were delayed
+  }
+
+  fetchDashboardData() {
+    this.loading = true;
+    this.taskService.getTasks().subscribe({
+      next: (response) => {
+        const tasks = response.value || response || [];
+        this.processTasksData(tasks);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching dashboard data:', err);
+        this.loading = false;
+      }
+    });
+  }
+
+  processTasksData(tasks: any[]) {
+    this.stats.totalTasks = tasks.length;
+    this.stats.completedTasks = tasks.filter(t => t.status?.toLowerCase() === 'completed').length;
+    this.stats.pendingTasks = tasks.filter(t => ['pending', 'todo', 'not started'].includes(t.status?.toLowerCase())).length;
+    this.stats.inProgressTasks = tasks.filter(t => ['in progress', 'inprogress', 'doing'].includes(t.status?.toLowerCase())).length;
+
+    // Sort by most recent and take top 5
+    const sortedTasks = [...tasks].sort((a, b) => new Date(b.createdat || b.date).getTime() - new Date(a.createdat || a.date).getTime());
+    
+    this.recentTasks = sortedTasks.slice(0, 5).map(t => ({
+      name: t.title || t.name || t.task_name || 'Unnamed Task',
+      assignedTo: t.assignedTo || t.assigned_user || 'Unassigned',
+      priority: t.priority || 'Medium',
+      status: t.status || 'Pending',
+      date: t.dueDate || t.due_date || t.date || t.createdat?.split('T')[0] || 'N/A'
+    }));
+
+    this.updateCharts(tasks);
   }
 
   initCharts(): void {
-    // Pie Chart
     if (this.taskChart) {
       const ctxPie = this.taskChart.nativeElement.getContext('2d');
-      if (ctxPie) {
+      if (ctxPie && !this.pieChart) {
         this.pieChart = new Chart(ctxPie, {
           type: 'pie',
           data: {
-            labels: ['Design', 'Development', 'Testing', 'Deployment'],
+            labels: ['Completed', 'In Progress', 'Pending', 'Other'],
             datasets: [{
-              data: [12, 19, 7, 5],
-              backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 99, 132, 0.7)'],
-              borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+              data: [0, 0, 0, 0],
+              backgroundColor: ['rgba(74, 222, 128, 0.7)', 'rgba(56, 189, 248, 0.7)', 'rgba(250, 204, 21, 0.7)', 'rgba(156, 163, 175, 0.7)'],
+              borderColor: ['rgba(74, 222, 128, 1)', 'rgba(56, 189, 248, 1)', 'rgba(250, 204, 21, 1)', 'rgba(156, 163, 175, 1)'],
               borderWidth: 1
             }]
           },
@@ -77,18 +116,17 @@ export class Dashboard implements OnInit, AfterViewInit {
       }
     }
 
-    // Bar Chart
     if (this.priorityChart) {
       const ctxBar = this.priorityChart.nativeElement.getContext('2d');
-      if (ctxBar) {
+      if (ctxBar && !this.barChart) {
         this.barChart = new Chart(ctxBar, {
           type: 'bar',
           data: {
             labels: ['Low', 'Medium', 'High'],
             datasets: [{
               label: 'Tasks by Priority',
-              data: [5, 7, 12],
-              backgroundColor: ['#34D399', '#FACC15', '#F87171'],
+              data: [0, 0, 0],
+              backgroundColor: ['#4ade80', '#facc15', '#f87171'],
               borderRadius: 8,
             }]
           },
@@ -98,7 +136,7 @@ export class Dashboard implements OnInit, AfterViewInit {
             plugins: { legend: { display: false } },
             scales: {
               x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-              y: { min: 0, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+              y: { min: 0, ticks: { stepSize: 1, color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
             }
           }
         });
@@ -106,11 +144,36 @@ export class Dashboard implements OnInit, AfterViewInit {
     }
   }
 
+  updateCharts(tasks: any[]) {
+    if (this.pieChart) {
+      const other = tasks.length - (this.stats.completedTasks + this.stats.inProgressTasks + this.stats.pendingTasks);
+      this.pieChart.data.datasets[0].data = [
+        this.stats.completedTasks,
+        this.stats.inProgressTasks,
+        this.stats.pendingTasks,
+        other > 0 ? other : 0
+      ];
+      this.pieChart.update();
+    }
+
+    if (this.barChart) {
+      const high = tasks.filter(t => t.priority?.toLowerCase() === 'high').length;
+      const medium = tasks.filter(t => t.priority?.toLowerCase() === 'medium' || t.priority?.toLowerCase() === 'normal').length;
+      const low = tasks.filter(t => t.priority?.toLowerCase() === 'low').length;
+      
+      this.barChart.data.datasets[0].data = [low, medium, high];
+      this.barChart.update();
+    }
+  }
+
   getStatusClass(status: string): string {
     switch(status?.toLowerCase()) {
       case 'completed': return 'text-green-400 bg-green-500/20';
-      case 'in progress': return 'text-blue-400 bg-blue-500/20';
-      case 'pending': return 'text-yellow-400 bg-yellow-500/20';
+      case 'in progress':
+      case 'inprogress':
+      case 'doing': return 'text-blue-400 bg-blue-500/20';
+      case 'pending': 
+      case 'todo': return 'text-yellow-400 bg-yellow-500/20';
       default: return 'text-gray-400 bg-gray-500/20';
     }
   }
@@ -118,7 +181,8 @@ export class Dashboard implements OnInit, AfterViewInit {
   getPriorityClass(priority: string): string {
     switch(priority?.toLowerCase()) {
       case 'high': return 'text-red-400 bg-red-500/20';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20';
+      case 'medium': 
+      case 'normal': return 'text-yellow-400 bg-yellow-500/20';
       case 'low': return 'text-green-400 bg-green-500/20';
       default: return 'text-gray-400 bg-gray-500/20';
     }
