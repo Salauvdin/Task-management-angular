@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '@/services/auth';
 import { TaskService } from '@/services/taskServiceapi';
+import { TimezoneService } from '@/services/timezone.service';
 
 @Component({
   selector: 'app-user-form',
@@ -18,7 +19,8 @@ export class UserFormComponent implements OnInit {
 
   constructor(
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private timezoneService: TimezoneService
   ) {}
 
   isEdit = false;
@@ -33,7 +35,8 @@ export class UserFormComponent implements OnInit {
     email: '',
     password: '',
     role: '',
-    projects: ''
+    projects: '',
+    createdAt: ''
   };
 
   nameError = '';
@@ -88,7 +91,8 @@ export class UserFormComponent implements OnInit {
       email: user.registerEmail || user.email || '',
       password: '',
       role: user.registerRole || user.userRole || user.role || '',
-      projects: user.projects || ''
+      projects: user.projects || '',
+      createdAt: user.createdAt || user.created_at || user.Createdat || user.createdat || user.CreatedAt || ''
     };
 
     this.applyPermissions(user.permissions || []);
@@ -100,6 +104,10 @@ export class UserFormComponent implements OnInit {
     if (Array.isArray(res?.data)) return res.data;
     if (Array.isArray(res?.users)) return res.users;
     return [];
+  }
+
+  formatCreatedDate(date: string | Date): string {
+    return this.timezoneService.formatDateTime(date);
   }
 
   private applyPermissions(apiPermissions: any[]): void {

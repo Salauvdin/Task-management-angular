@@ -1,23 +1,26 @@
-// interceptors/auth.interceptor.ts
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler } from '@angular/common/http';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  constructor() {}
+
   intercept(req: HttpRequest<any>, next: HttpHandler) {
-    if (req.headers.has('Authorization')) {
-      return next.handle(req);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const tenantIdStr = typeof window !== 'undefined' ? localStorage.getItem('selectedTenantId') : null;
+    const tenantId = tenantIdStr ? Number(tenantIdStr) : 0;
+
+    let headers = req.headers;
+
+    if (token && !headers.has('Authorization')) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const token = localStorage.getItem('token');
-    // console.log('AuthInterceptor: token=', token);
-    if (token) {
-      const cloned = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${token}`)
-      });
-      return next.handle(cloned);
+    if (tenantId !== undefined && tenantId !== null && tenantId !== 0) {
+      headers = headers.set('x-tenant-id', tenantId.toString());
     }
 
-    return next.handle(req);
+    const cloned = req.clone({ headers });
+    return next.handle(cloned);
   }
 }

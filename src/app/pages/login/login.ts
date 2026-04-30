@@ -80,19 +80,11 @@ export class Login {
         })
       );
 
-      console.log("Login Success:",);
+      console.log("Login Success:", res);
 
-      // Store token and user data
-      if (res.token) {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-        
-        // Redirect based on role
-        if (res.user?.role === 'Admin') {
-          this.router.navigate(['/admin/dashboard']);
-        } else {
-          this.router.navigate(['/dashboard']);
-        }
+      if (!res?.token || !res?.user) {
+        this.errorMessage = 'Invalid login response';
+        alert(this.errorMessage);
       }
 
     } catch (err: any) {

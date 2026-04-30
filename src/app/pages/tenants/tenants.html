@@ -1,0 +1,83 @@
+<div class="tenants-container">
+  <div class="header-section">
+    <div class="title-group">
+      <h1>Tenant Management</h1>
+      <p class="current-tenant-label" *ngIf="selectedTenantId">
+        Active Tenant: <span>{{ selectedTenantName }}</span>
+      </p>
+    </div>
+    <button class="btn-primary" (click)="openCreateModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Add Tenant
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error-banner">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading && !tenants.length" class="loading-spinner">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="!loading && !tenants.length" class="empty-state">
+    <p>No tenants found. Create your first tenant to get started.</p>
+  </div>
+
+  <div class="tenants-grid">
+    <div *ngFor="let tenant of tenants" 
+         class="tenant-card" 
+         [class.active]="tenant.id === selectedTenantId"
+         (click)="selectTenant(tenant)">
+      <div class="active-badge" *ngIf="tenant.id === selectedTenantId">
+        <span>Active</span>
+      </div>
+      <div class="tenant-info">
+        <div class="tenant-logo">
+          <img *ngIf="tenant.logo" [src]="tenant.logo" [alt]="tenant.name">
+          <span *ngIf="!tenant.logo">{{ getInitials(tenant.name) }}</span>
+        </div>
+        <div class="tenant-details">
+          <h3>{{ tenant.name }}</h3>
+          <p class="tenant-id">ID: {{ tenant.id }}</p>
+        </div>
+      </div>
+      <div class="tenant-actions" (click)="$event.stopPropagation()">
+        <button class="btn-icon" (click)="openEditModal(tenant)" title="Edit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </button>
+        <button class="btn-icon delete" (click)="deleteTenant(tenant.id!)" title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>{{ isEditing ? 'Edit Tenant' : 'Create New Tenant' }}</h2>
+        <button class="btn-icon" (click)="closeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="tenantName">Tenant Name</label>
+          <input type="text" id="tenantName" [(ngModel)]="currentTenant.name" placeholder="Enter tenant name">
+        </div>
+        <div class="form-group">
+          <label for="tenantLogo">Logo URL (Optional)</label>
+          <input type="text" id="tenantLogo" [(ngModel)]="currentTenant.logo" placeholder="https://example.com/logo.png">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveTenant()" [disabled]="!currentTenant.name || loading">
+          {{ loading ? 'Saving...' : (isEditing ? 'Update Tenant' : 'Create Tenant') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

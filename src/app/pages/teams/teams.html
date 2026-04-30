@@ -47,13 +47,15 @@
         <div class="team-info">
           <h3 class="team-name">{{ team.name }}</h3>
           <p class="team-meta">
-            <span class="task-count">{{ getTeamStats(team).taskCount }} tasks</span>
-            <span class="created-date">Created {{ getTeamStats(team).createdAt }}</span>
+            <span class="task-count">{{ team.taskNames?.length || 0 }} tasks</span>
           </p>
         </div>
         <div class="team-actions" (click)="$event.stopPropagation()">
-          <button class="btn-icon" title="View Details">
+          <button class="btn-icon" title="View Details" (click)="viewTeamDetails(team)">
             <i class="fa-solid fa-eye"></i>
+          </button>
+          <button class="btn-icon" title="Edit Team" (click)="openEditModal(team)">
+            <i class="fa-solid fa-edit"></i>
           </button>
           <button class="btn-icon" title="Delete Team" (click)="deleteTeam(team.id)">
             <i class="fa-solid fa-trash"></i>
@@ -64,12 +66,12 @@
       <div class="team-stats">
         <div class="stat-item">
           <i class="fa-solid fa-tasks"></i>
-          <span>{{ getTeamStats(team).taskCount }}</span>
+          <span>{{ team.taskNames?.length || 0 }}</span>
           <small>Tasks</small>
         </div>
         <div class="stat-item">
           <i class="fa-solid fa-users"></i>
-          <span>--</span>
+          <span>{{ team.assignedUsers?.length || 0 }}</span>
           <small>Members</small>
         </div>
         <div class="stat-item">
@@ -99,16 +101,196 @@
           id="teamName"
           type="text" 
           class="form-control" 
-          #teamNameInput
+          [(ngModel)]="newTeamName"
           placeholder="Enter team name"
         >
       </div>
+
+      <div class="form-group">
+        <label>Select Tasks</label>
+        <div class="dropdown-container">
+          <div class="dropdown-header" (click)="toggleTaskDropdown()">
+            <span *ngIf="selectedTaskIds.length === 0">Select tasks...</span>
+            <span *ngIf="selectedTaskIds.length > 0">{{ selectedTaskIds.length }} tasks selected</span>
+            <i class="fa-solid" [class.fa-chevron-down]="!showTaskDropdown" [class.fa-chevron-up]="showTaskDropdown"></i>
+          </div>
+          
+          <div class="dropdown-content" [class.show]="showTaskDropdown">
+            <div class="selection-list">
+              <div *ngFor="let task of availableTasks" class="selection-item" 
+                   [class.selected]="isTaskSelected(task)"
+                   (click)="toggleTaskSelection(task)">
+                <div class="item-info">
+                  <span class="item-primary">{{ task.taskName || task.title }}</span>
+                  <span class="item-secondary">{{ task.status || 'Pending' }}</span>
+                </div>
+                <i class="fa-solid" [class.fa-check-circle]="isTaskSelected(task)" 
+                   [class.fa-circle]="!isTaskSelected(task)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Selected Tasks Preview -->
+        <div class="selected-chips" *ngIf="getSelectedTasks().length > 0">
+          <div *ngFor="let task of getSelectedTasks()" class="chip" (click)="toggleTaskSelection(task)">
+            <span>{{ task.taskName || task.title }}</span>
+            <i class="fa-solid fa-times"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Select Team Members</label>
+        <div class="dropdown-container">
+          <div class="dropdown-header" (click)="toggleUserDropdown()">
+            <span *ngIf="selectedUserIds.length === 0">Select members...</span>
+            <span *ngIf="selectedUserIds.length > 0">{{ selectedUserIds.length }} members selected</span>
+            <i class="fa-solid" [class.fa-chevron-down]="!showUserDropdown" [class.fa-chevron-up]="showUserDropdown"></i>
+          </div>
+          
+          <div class="dropdown-content" [class.show]="showUserDropdown">
+            <div class="selection-list">
+              <div *ngFor="let user of availableUsers" class="selection-item" 
+                   [class.selected]="isUserSelected(user.registerId || user.userId)"
+                   (click)="toggleUserSelection(user.registerId || user.userId)">
+                <div class="item-info">
+                  <span class="item-primary">{{ user.registerName || user.userName || user.name }}</span>
+                  <span class="item-secondary">{{ user.registerRole || user.role }}</span>
+                </div>
+                <i class="fa-solid" [class.fa-check-circle]="isUserSelected(user.registerId || user.userId)" 
+                   [class.fa-circle]="!isUserSelected(user.registerId || user.userId)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Users Preview -->
+        <div class="selected-chips" *ngIf="getSelectedUsers().length > 0">
+          <div *ngFor="let user of getSelectedUsers()" class="chip" (click)="toggleUserSelection(user.registerId || user.userId)">
+            <span>{{ user.registerName || user.userName || user.name }}</span>
+            <i class="fa-solid fa-times"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="initialComment">Initial Comment</label>
+        <textarea 
+          id="initialComment"
+          class="form-control" 
+          [(ngModel)]="initialComment"
+          placeholder="Add an initial comment for the team..."
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" (click)="createTeam()">
+        <i class="fa-solid fa-plus"></i>
+        Create Team
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Team Modal -->
+<div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Team</h2>
+      <button class="btn-close" (click)="closeEditModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="editTeamName">Team Name *</label>
+        <input 
+          id="editTeamName"
+          type="text" 
+          class="form-control" 
+          [(ngModel)]="editTeamName"
+          placeholder="Enter team name"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Select Tasks</label>
+        <div class="dropdown-container">
+          <div class="dropdown-header" (click)="toggleTaskDropdown()">
+            <span *ngIf="selectedTaskIds.length === 0">Select tasks...</span>
+            <span *ngIf="selectedTaskIds.length > 0">{{ selectedTaskIds.length }} tasks selected</span>
+            <i class="fa-solid" [class.fa-chevron-down]="!showTaskDropdown" [class.fa-chevron-up]="showTaskDropdown"></i>
+          </div>
+          
+          <div class="dropdown-content" [class.show]="showTaskDropdown">
+            <div class="selection-list">
+              <div *ngFor="let task of availableTasks" class="selection-item" 
+                   [class.selected]="isTaskSelected(task)"
+                   (click)="toggleTaskSelection(task)">
+                <div class="item-info">
+                  <span class="item-primary">{{ task.taskName || task.title }}</span>
+                  <span class="item-secondary">{{ task.status || 'Pending' }}</span>
+                </div>
+                <i class="fa-solid" [class.fa-check-circle]="isTaskSelected(task)" 
+                   [class.fa-circle]="!isTaskSelected(task)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Tasks Preview -->
+        <div class="selected-chips" *ngIf="getSelectedTasks().length > 0">
+          <div *ngFor="let task of getSelectedTasks()" class="chip" (click)="toggleTaskSelection(task)">
+            <span>{{ task.taskName || task.title }}</span>
+            <i class="fa-solid fa-times"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Team Members</label>
+        <div class="dropdown-container">
+          <div class="dropdown-header" (click)="toggleUserDropdown()">
+            <span *ngIf="selectedUserIds.length === 0">Select members...</span>
+            <span *ngIf="selectedUserIds.length > 0">{{ selectedUserIds.length }} members selected</span>
+            <i class="fa-solid" [class.fa-chevron-down]="!showUserDropdown" [class.fa-chevron-up]="showUserDropdown"></i>
+          </div>
+          
+          <div class="dropdown-content" [class.show]="showUserDropdown">
+            <div class="selection-list">
+              <div *ngFor="let user of availableUsers" class="selection-item" 
+                   [class.selected]="isUserSelected(user.registerId || user.userId)"
+                   (click)="toggleUserSelection(user.registerId || user.userId)">
+                <div class="item-info">
+                  <span class="item-primary">{{ user.registerName || user.userName || user.name }}</span>
+                  <span class="item-secondary">{{ user.registerRole || user.role }}</span>
+                </div>
+                <i class="fa-solid" [class.fa-check-circle]="isUserSelected(user.registerId || user.userId)" 
+                   [class.fa-circle]="!isUserSelected(user.registerId || user.userId)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Users Preview -->
+        <div class="selected-chips" *ngIf="getSelectedUsers().length > 0">
+          <div *ngFor="let user of getSelectedUsers()" class="chip" (click)="toggleUserSelection(user.registerId || user.userId)">
+            <span>{{ user.registerName || user.userName || user.name }}</span>
+            <i class="fa-solid fa-times"></i>
+          </div>
+        </div>
+      </div>
       
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="createTeamWithName(teamNameInput.value)">
-          <i class="fa-solid fa-plus"></i>
-          Create Team
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="updateTeam()">
+          <i class="fa-solid fa-save"></i>
+          Update Team
         </button>
       </div>
     </div>
@@ -140,33 +322,52 @@
             </div>
             <div class="detail-item">
               <label>Total Tasks:</label>
-              <span>{{ getTeamStats(selectedTeam).taskCount }}</span>
+              <span>{{ selectedTeam.taskNames?.length || 0 }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Team Members:</label>
+              <span>{{ selectedTeam.assignedUsers?.length || 0 }}</span>
             </div>
           </div>
         </div>
         
+        <!-- Tasks Section -->
         <div class="detail-section">
-          <h3>Team Statistics</h3>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <i class="fa-solid fa-tasks"></i>
-              <div class="stat-info">
-                <h4>{{ getTeamStats(selectedTeam).taskCount }}</h4>
-                <p>Total Tasks</p>
+          <h3>All Tasks</h3>
+          <div class="task-grid">
+            <div *ngFor="let taskName of selectedTeam.taskNames" class="task-card">
+              <div class="task-header">
+                <h4>{{ taskName }}</h4>
               </div>
             </div>
-            <div class="stat-card">
-              <i class="fa-solid fa-users"></i>
-              <div class="stat-info">
-                <h4>--</h4>
-                <p>Team Members</p>
+          </div>
+        </div>
+
+        <!-- Team Members Section -->
+        <div class="detail-section">
+          <h3>Team Members</h3>
+          <div class="members-grid">
+            <div *ngFor="let user of selectedTeam.assignedUsers" class="member-card">
+              <div class="member-info">
+                <span class="member-name">{{ user.name }}</span>
+                <span class="member-role">{{ user.role }}</span>
+                <span class="member-email">{{ user.email }}</span>
               </div>
             </div>
-            <div class="stat-card">
-              <i class="fa-solid fa-calendar"></i>
-              <div class="stat-info">
-                <h4>{{ getTeamStats(selectedTeam).createdAt }}</h4>
-                <p>Created On</p>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="detail-section" *ngIf="selectedTeam.comments && selectedTeam.comments.length > 0">
+          <h3>Comments</h3>
+          <div class="comments-grid">
+            <div *ngFor="let comment of selectedTeam.comments" class="comment-card">
+              <div class="comment-header">
+                <span class="comment-user">{{ comment.userName || comment.user }}</span>
+                <span class="comment-time">{{ comment.createdAt | date:'short' }}</span>
+              </div>
+              <div class="comment-content">
+                <p>{{ comment.message }}</p>
               </div>
             </div>
           </div>
@@ -176,10 +377,6 @@
     
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="closeTeamDetails()">Close</button>
-      <button class="btn btn-primary">
-        <i class="fa-solid fa-edit"></i>
-        Edit Team
-      </button>
     </div>
   </div>
 </div>

@@ -2,7 +2,8 @@
   <div class="flex-1 max-w-7xl mx-auto">
 
     <!-- HEADER -->
-    <div class="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+    <div
+      class="flex justify-between items-center mb-8 bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
       <div>
         <h1 class="text-4xl font-semibold text-white tracking-wide flex items-center gap-3">
           <i class="fa-solid fa-users text-blue-400"></i>
@@ -13,12 +14,20 @@
           Manage users and project roles
         </p>
       </div>
-      <button
-        class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl transition-all duration-200 flex gap-2 items-center hover:scale-105"
-        (click)="openUserForm()">
-        <i class="fa-solid fa-plus"></i>
-        Create User
-      </button>
+      <div class="flex gap-3">
+        <button
+          class="bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 px-4 py-3 rounded-xl transition-all duration-200 flex gap-2 items-center"
+          (click)="refreshUsers()">
+          <i class="fa-solid fa-rotate-right" [class.fa-spin]="isLoading"></i>
+          Refresh
+        </button>
+        <button
+          class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl transition-all duration-200 flex gap-2 items-center hover:scale-105"
+          (click)="openUserForm()">
+          <i class="fa-solid fa-plus"></i>
+          Create User
+        </button>
+      </div>
     </div>
 
     <!-- STATS CARDS -->
@@ -44,10 +53,12 @@
       <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-600/5 border border-emerald-500/20">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-emerald-300 text-sm flex items-center gap-2"><i class="fa-solid fa-briefcase"></i> Managers</p>
+            <p class="text-emerald-300 text-sm flex items-center gap-2"><i class="fa-solid fa-briefcase"></i> Managers
+            </p>
             <p class="text-3xl font-semibold mt-2 text-white">{{getUserCountByRole('Manager')}}</p>
           </div>
-          <div class="bg-emerald-500/20 p-3 rounded-lg"><i class="fa-solid fa-briefcase text-emerald-300 text-xl"></i></div>
+          <div class="bg-emerald-500/20 p-3 rounded-lg"><i class="fa-solid fa-briefcase text-emerald-300 text-xl"></i>
+          </div>
         </div>
       </div>
       <div class="p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-yellow-600/5 border border-amber-500/20">
@@ -67,11 +78,13 @@
         <h2 class="text-lg font-medium text-white flex items-center gap-2">
           <i class="fa-solid fa-users text-blue-400"></i>
           Users List
-          <span class="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 ml-2">{{filteredUsers.length}} users</span>
+          <span class="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300 ml-2">{{filteredUsers.length}}
+            users</span>
         </h2>
         <div class="relative w-full sm:w-72">
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500"></i>
-          <input type="text" placeholder="Search by name, email or role..." [(ngModel)]="searchText" (input)="filterUsers()"
+          <input type="text" placeholder="Search by name, email or role..." [(ngModel)]="searchText"
+            (input)="filterUsers()"
             class="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 outline-none text-gray-200 placeholder-gray-500" />
         </div>
       </div>
@@ -84,6 +97,7 @@
               <th class="p-4">Email</th>
               <th class="p-4">Role</th>
               <th class="p-4">Projects</th>
+              <th class="p-4">Joined</th>
               <th class="p-4 text-center">Actions</th>
             </tr>
           </thead>
@@ -92,12 +106,20 @@
             <tr class="border-b border-white/5 hover:bg-white/5 transition-all duration-200">
               <td class="p-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-sm font-medium border border-white/10">
+                  <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-sm font-medium border border-white/10">
                     {{user.name?.charAt(0) || '?'}}
                   </div>
                   <div>
                     <p class="font-medium text-white">{{user.name}}</p>
-                    <p class="text-xs text-gray-500">ID: #{{user.id}}</p>
+                    <div class="flex items-center gap-2 text-[10px]">
+                      <span class="text-gray-500">ID: #{{user.id}}</span>
+                      <span class="text-gray-600">•</span>
+                      <!-- <span class="text-blue-400/60 flex items-center gap-1" *ngIf="user.createdAt">
+                        <i class="fa-regular fa-clock text-[9px]"></i>
+                        {{formatCreatedDateOnly(user.createdAt)}}
+                      </span> -->
+                    </div>
                   </div>
                 </div>
               </td>
@@ -108,8 +130,7 @@
                 </div>
               </td>
               <td class="p-4">
-                <span class="px-3 py-1.5 text-xs rounded-full font-medium flex items-center gap-1.5 w-fit"
-                  [ngClass]="{
+                <span class="px-3 py-1.5 text-xs rounded-full font-medium flex items-center gap-1.5 w-fit" [ngClass]="{
                     'bg-purple-500/20 text-purple-300 border border-purple-500/30': user.role==='Admin',
                     'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30': user.role==='Manager',
                     'bg-amber-500/20 text-amber-300 border border-amber-500/30': user.role==='Member'
@@ -119,15 +140,22 @@
                 </span>
               </td>
               <td class="p-4">
-                <span class="bg-white/5 px-2 py-1 rounded-md text-xs text-gray-300 border border-white/10">{{user.projects}}</span>
+                <span
+                  class="bg-white/5 px-2 py-1 rounded-md text-xs text-gray-300 border border-white/10">{{user.projects}}</span>
+              </td>
+              <td class="p-4 text-xs text-gray-500">
+                {{ user.createdAt ? formatCreatedDate(user.createdAt) : 'Not available' }}
+                <span *ngIf="user.createdAt" class="text-[9px] bg-white/10 px-1 rounded text-gray-600 ml-1">{{timezoneService.getUserTimezone()}}</span>
               </td>
               <td class="p-4">
                 <div class="flex gap-2 justify-center">
-                  <button class="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 transition-all duration-200"
+                  <button 
+                    class="p-2 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 transition-all duration-200"
                     (click)="openUserForm(user)" title="Edit User">
                     <i class="fa-solid fa-pen text-xs"></i>
                   </button>
-                  <button class="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all duration-200"
+                  <button
+                    class="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all duration-200"
                     (click)="showDialog(user)" title="Delete User">
                     <i class="fa-solid fa-trash text-xs"></i>
                   </button>
@@ -142,7 +170,8 @@
                   <i class="fa-solid fa-users-slash text-4xl text-gray-600 mb-3"></i>
                   <p class="text-gray-400">No users found</p>
                   <p class="text-sm text-gray-500 mt-1">Try adjusting your search</p>
-                  <button class="mt-4 text-blue-400 hover:text-blue-300 text-sm bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/30"
+                  <button
+                    class="mt-4 text-blue-400 hover:text-blue-300 text-sm bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/30"
                     (click)="openUserForm()">
                     <i class="fa-solid fa-plus mr-1"></i>Create new user
                   </button>
@@ -163,10 +192,8 @@
             <i class="fa-solid fa-chevron-left text-xs"></i>
           </button>
           @for (page of getPages(); track page) {
-          <button (click)="goToPage(page)"
-            [class.bg-blue-500/20]="currentPage === page"
-            [class.text-blue-300]="currentPage === page"
-            [class.border-blue-500/30]="currentPage === page"
+          <button (click)="goToPage(page)" [class.bg-blue-500/20]="currentPage === page"
+            [class.text-blue-300]="currentPage === page" [class.border-blue-500/30]="currentPage === page"
             class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center justify-center">
             {{page}}
           </button>
@@ -182,16 +209,28 @@
     <!-- Role Distribution -->
     <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fa-solid fa-shield text-purple-300"></i></div>
-        <div><p class="text-sm text-gray-400">Admin Access</p><p class="text-lg font-semibold">{{getUserCountByRole('Admin')}} users</p></div>
+        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><i
+            class="fa-solid fa-shield text-purple-300"></i></div>
+        <div>
+          <p class="text-sm text-gray-400">Admin Access</p>
+          <p class="text-lg font-semibold">{{getUserCountByRole('Admin')}} users</p>
+        </div>
       </div>
       <div class="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center"><i class="fa-solid fa-briefcase text-emerald-300"></i></div>
-        <div><p class="text-sm text-gray-400">Manager Access</p><p class="text-lg font-semibold">{{getUserCountByRole('Manager')}} users</p></div>
+        <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center"><i
+            class="fa-solid fa-briefcase text-emerald-300"></i></div>
+        <div>
+          <p class="text-sm text-gray-400">Manager Access</p>
+          <p class="text-lg font-semibold">{{getUserCountByRole('Manager')}} users</p>
+        </div>
       </div>
       <div class="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center"><i class="fa-solid fa-user text-amber-300"></i></div>
-        <div><p class="text-sm text-gray-400">Member Access</p><p class="text-lg font-semibold">{{getUserCountByRole('Member')}} users</p></div>
+        <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center"><i
+            class="fa-solid fa-user text-amber-300"></i></div>
+        <div>
+          <p class="text-sm text-gray-400">Member Access</p>
+          <p class="text-lg font-semibold">{{getUserCountByRole('Member')}} users</p>
+        </div>
       </div>
     </div>
 

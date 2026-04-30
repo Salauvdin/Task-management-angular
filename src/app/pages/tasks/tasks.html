@@ -226,13 +226,23 @@
               </span>
             </div>
 
-            <!-- DATE -->
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-400">Due Date</span>
-              <span class="text-gray-300 flex items-center gap-1">
-                <i class="fa-regular fa-calendar text-gray-500"></i>
-                {{(task.startDate || task.dueDate) | date:'mediumDate'}}
-              </span>
+            <!-- DATES -->
+            <div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-white/5">
+              <div class="flex flex-col text-xs">
+                <span class="text-gray-500 mb-1">Created At</span>
+                <span class="text-gray-300 flex items-center gap-1">
+                  <i class="fa-regular fa-calendar-plus text-blue-400/50"></i>
+                  {{formatCreatedDate(task.createdAt)}}
+                  <span class="text-[9px] bg-white/10 px-1 rounded text-gray-500">{{timezoneService.getUserTimezone()}}</span>
+                </span>
+              </div>
+              <div class="flex flex-col text-xs">
+                <span class="text-gray-500 mb-1">Due Date</span>
+                <span class="text-gray-300 flex items-center gap-1">
+                  <i class="fa-regular fa-calendar text-yellow-400/50"></i>
+                  {{formatDueDate(task.startDate || task.dueDate)}}
+                </span>
+              </div>
             </div>
 
             <!-- PROGRESS BAR -->
@@ -287,6 +297,7 @@
                 <th class="p-4">Priority</th>
                 <th class="p-4">Assigned To</th>
                 <th class="p-4">Due Date</th>
+                <th class="p-4">Created At</th>
                 <!-- Actions column - Using hasPermission directive to check if either write or delete permission exists -->
                 <th *hasPermission="{ menu: 'Tasks', action: 'write' }" class="p-4 text-center">Actions</th>
                 <th *hasPermission="{ menu: 'Tasks', action: 'delete' }" class="p-4 text-center">Actions</th>
@@ -331,7 +342,11 @@
                 </td>
                 <td class="p-4 text-gray-300">
                   <i class="fa-regular fa-calendar mr-2 text-gray-500"></i>
-                  {{(task.startDate || task.dueDate) | date:'mediumDate'}}
+                  {{formatDueDate(task.startDate || task.dueDate)}}
+                </td>
+                <td class="p-4 text-gray-400 text-xs">
+                  {{formatCreatedDate(task.createdAt)}}
+                  <span class="text-[9px] bg-white/10 px-1 rounded text-gray-600 ml-1">{{timezoneService.getUserTimezone()}}</span>
                 </td>
                 <!-- Edit Button Column - Using hasPermission directive -->
                 <td *hasPermission="{ menu: 'Tasks', action: 'write' }" class="p-4">
