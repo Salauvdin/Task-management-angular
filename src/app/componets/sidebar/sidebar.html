@@ -47,7 +47,6 @@
       <label>Select Tenant</label>
       <div class="custom-select-wrapper">
         <select (change)="onTenantChange($event)" [value]="selectedTenantId" class="custom-select">
-          <option [value]="0">All Tenants</option>
           <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.name }}</option>
         </select>
         <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400">

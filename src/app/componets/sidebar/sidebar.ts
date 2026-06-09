@@ -15,7 +15,6 @@ import { ChangeDetectorRef } from '@angular/core';
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css'
-
 })
 export class SidebarComponent implements OnInit {
   collapsed: boolean = false;
@@ -24,61 +23,61 @@ export class SidebarComponent implements OnInit {
   notificationError = '';
   isLoadingNotifications = false;
   private cd = inject(ChangeDetectorRef);
-
+  
   // All menu items with their required permissions
   menuItems = [
-    {
-      path: '/admin/dashboard',
-      icon: 'fa-solid fa-chart-line',
+    { 
+      path: '/admin/dashboard', 
+      icon: 'fa-solid fa-chart-line', 
       label: 'Dashboard',
       color: 'indigo',
       menuName: 'View Dashboard'
     },
-    {
-      path: '/admin/tasks',
-      icon: 'fa-solid fa-list-check',
+    { 
+      path: '/admin/tasks', 
+      icon: 'fa-solid fa-list-check', 
       label: 'Tasks',
       color: 'emerald',
       menuName: 'Tasks'
     },
-    {
-      path: '/admin/reports',
-      icon: 'fa-solid fa-chart-pie',
+    { 
+      path: '/admin/reports', 
+      icon: 'fa-solid fa-chart-pie', 
       label: 'Reports',
       color: 'purple',
       menuName: 'Reports'
     },
-    {
-      path: '/admin/users',
-      icon: 'fa-solid fa-users',
+    { 
+      path: '/admin/users', 
+      icon: 'fa-solid fa-users', 
       label: 'Users',
       color: 'amber',
       menuName: 'User Management'
     },
-    {
-      path: '/admin/teams',
-      icon: 'fa-solid fa-users-gear',
+    { 
+      path: '/admin/teams', 
+      icon: 'fa-solid fa-users-gear', 
       label: 'Teams',
       color: 'blue',
       menuName: 'Teams'
     },
-    {
-      path: '/admin/configuration',
-      icon: 'fa-solid fa-gear',
+    { 
+      path: '/admin/configuration', 
+      icon: 'fa-solid fa-gear', 
       label: 'Configuration',
       color: 'cyan',
       menuName: 'Configuration'
     },
-    {
-      path: '/admin/create-team',
-      icon: 'fa-solid fa-user-plus',
+    { 
+      path: '/admin/create-team', 
+      icon: 'fa-solid fa-user-plus', 
       label: 'Create Team',
       color: 'teal',
       menuName: 'Team Management'
     },
-    {
-      path: '/admin/tenants',
-      icon: 'fa-solid fa-building-user',
+    { 
+      path: '/admin/tenants', 
+      icon: 'fa-solid fa-building-user', 
       label: 'Tenants',
       color: 'orange',
       menuName: 'Configuration'
@@ -89,16 +88,21 @@ export class SidebarComponent implements OnInit {
 
   tenants: Tenant[] = [];
   selectedTenantId: number = 0;
-  activeTenantName: string = 'All Tenants';
 
   constructor(
     private router: Router,
     public authService: AuthService,
     private taskService: TaskService,
     private tenantService: TenantService
-  ) { }
+  ) {}
 
   ngOnInit() {
+    // 1. Subscribe to tenant selection changes FIRST so we have the correct ID before loading tenants
+    this.tenantService.selectedTenantId$.subscribe(id => {
+      this.selectedTenantId = id;
+      this.cd.detectChanges();
+    });
+
     this.filterMenuItems();
     // Reload menus when permissions change
     this.authService.userPermissions$.subscribe(() => {
@@ -116,22 +120,27 @@ export class SidebarComponent implements OnInit {
     if (this.isSuperAdmin()) {
       this.loadTenants();
     }
+  }
 
-    // Subscribe to tenant selection changes
-    this.tenantService.selectedTenantId$.subscribe(id => {
-      this.selectedTenantId = id;
-    });
-
-    // Subscribe to the full tenant object to get the name reliably
-    this.tenantService.selectedTenant$.subscribe(tenant => {
-      this.activeTenantName = tenant ? tenant.name : 'All Tenants';
-    });
+  get activeTenantName(): string {
+    if (this.selectedTenantId === 0) return 'Loading...';
+    // Use loose equality (==) in case the API returns the ID as a string
+    const tenant = this.tenants.find(t => t.id == this.selectedTenantId);
+    return tenant ? tenant.name : 'Loading...';
   }
 
   loadTenants() {
     this.tenantService.getTenants().subscribe({
       next: (data) => {
         this.tenants = data;
+        
+        // Auto-select the first tenant ONLY if none is selected in the service/localStorage
+        // We check the service value directly to be extra safe
+        const currentId = this.tenantService.getSelectedTenantId();
+        if (currentId === 0 && data.length > 0) {
+          this.tenantService.setTenantId(data[0].id!);
+        }
+        
         this.cd.detectChanges();
       },
       error: (err) => console.error('Error loading tenants in sidebar:', err)
@@ -141,7 +150,7 @@ export class SidebarComponent implements OnInit {
   onTenantChange(event: any) {
     const tenantId = Number(event.target.value);
     this.tenantService.setTenantId(tenantId);
-
+    
     // Refresh the current page data
     const currentUrl = this.router.url;
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
@@ -179,7 +188,7 @@ export class SidebarComponent implements OnInit {
     const user = this.authService.getCurrentUser();
     return user?.email || user?.registerEmail || 'admin@site.com';
   }
-
+  
   isSuperAdmin(): boolean {
     return this.authService.isSuperAdmin();
   }
@@ -194,11 +203,11 @@ export class SidebarComponent implements OnInit {
       this.isLoadingNotifications = false;
       return;
     }
-
+    
     this.showNotifications = true;
     this.notificationError = '';
     this.isLoadingNotifications = false;
-
+    
     this.notifications = [
       {
         id: 1,
@@ -209,7 +218,7 @@ export class SidebarComponent implements OnInit {
         createdAt: "2026-04-22T07:38:05.000Z"
       }
     ];
-
+    
     this.taskService.getNotifications().subscribe({
       next: (response) => {
         const apiNotifications = response.value || response || [];
@@ -234,7 +243,7 @@ export class SidebarComponent implements OnInit {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-
+    
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min ago`;
     if (diffHours < 24) return `${diffHours} hour ago`;

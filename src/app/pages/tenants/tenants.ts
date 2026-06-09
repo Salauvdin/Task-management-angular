@@ -2,6 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TenantService, Tenant } from '@/services/tenant.service';
+import { AuthService } from '@/services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tenants',
@@ -25,10 +27,24 @@ export class TenantsComponent implements OnInit {
 
   constructor(
     private tenantService: TenantService,
+    private authService: AuthService,
+    private router: Router,
     private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    // Check for token and super admin status before loading anything
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (!this.authService.isSuperAdmin()) {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
     this.loadTenants();
     this.tenantService.selectedTenantId$.subscribe(id => {
       this.selectedTenantId = id;
@@ -121,7 +137,7 @@ export class TenantsComponent implements OnInit {
   }
 
   get selectedTenantName(): string {
-    const tenant = this.tenants.find(t => t.id === this.selectedTenantId);
+    const tenant = this.tenants.find(t => t.id == this.selectedTenantId);
     return tenant ? tenant.name : '';
   }
 

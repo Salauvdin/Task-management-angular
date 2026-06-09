@@ -88,7 +88,7 @@
       </div>
 
       <!-- Recent Tasks Table -->
-      <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+      <!-- <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
         <div class="px-6 py-4 border-b border-white/10">
           <h3 class="text-lg font-semibold text-white">Recent Tasks</h3>
         </div>
@@ -126,15 +126,15 @@
                 </td>
                 <td class="p-4">{{ task.date }}</td>
                 <td class="p-4">
-                  <div class="flex gap-2">
-                    <!-- Edit button with permission directive -->
+                  <div class="flex gap-2"> -->
+                    <!-- Edit button with permission directive
                     <button *hasPermission="{ menu: 'Tasks', action: 'write' }" 
                             (click)="addTask()"
                             class="text-blue-400 hover:text-blue-300">
                       <i class="fa-solid fa-edit"></i> Edit
-                    </button>
+                    </button> -->
                     <!-- Delete button with permission directive -->
-                    <button *hasPermission="{ menu: 'Tasks', action: 'delete' }" 
+                    <!-- <button *hasPermission="{ menu: 'Tasks', action: 'delete' }" 
                             (click)="deleteTask(task)"
                             class="text-red-400 hover:text-red-300">
                       <i class="fa-solid fa-trash"></i> Delete
@@ -145,7 +145,7 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </div> -->
 
     </div>
 
