@@ -3,7 +3,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": "./",
+    "rootDir": "./src",
     "outDir": "./out-tsc/app",
+    "ignoreDeprecations": "5.0",
     "types": [
       "node"
     ]
@@ -15,3 +18,22 @@
     "src/**/*.spec.ts"
   ]
 }
+
+// {
+//   "extends": "./tsconfig.json",
+//   "compilerOptions": {
+//     "baseUrl": "./",
+//     "rootDir": "./src",
+//     "outDir": "./out-tsc/app",
+//     "ignoreDeprecations": "5.0",
+//     "types": [
+//       "node"
+//     ]
+//   },
+//   "include": [
+//     "src/**/*.ts"
+//   ],
+//   "exclude": [
+//     "src/**/*.spec.ts"
+//   ]
+// }

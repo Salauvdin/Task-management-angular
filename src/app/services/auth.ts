@@ -44,12 +44,7 @@ export class AuthService {
 
   currentUser$ = this.currentUserSubject.asObservable();
   userPermissions$ = this.userPermissionsSubject.asObservable();
-// ngOnInit() {
-//   const user = localStorage.getItem('user');
-//   if (user) {
-//     this.Auth.setUser(JSON.parse(user));
-//   }
-// }
+
   constructor(
     private router: Router,
     private http: HttpClient,
@@ -57,6 +52,11 @@ export class AuthService {
     private tenantService: TenantService
   ) {
     this.restoreAuthState();
+    
+    // Only initialize tenant if we successfully restored a valid user session
+    if (this.isLoggedIn() && !this.isTokenExpired()) {
+      this.tenantService.initializeFromStorage();
+    }
   }
 
   // Login with backend API

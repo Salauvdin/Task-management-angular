@@ -18,7 +18,7 @@ export interface Tenant {
   providedIn: 'root'
 })
 export class TenantService {
-  private apiUrl = 'http://localhost:3000/tenants';
+  private apiUrl = 'http://localhost:3000/v1/tenants';
   private selectedTenantIdSubject = new BehaviorSubject<number>(0);
   private selectedTenantSubject = new BehaviorSubject<Tenant | null>(null);
 
@@ -26,11 +26,22 @@ export class TenantService {
   selectedTenant$ = this.selectedTenantSubject.asObservable();
 
   constructor(private http: HttpClient) {
+    // We do NOT initialize from storage in the constructor anymore.
+    // Instead, we wait for the app to explicitly call it or for a login to happen.
+    // This prevents the "pre-login" API calls on app boot.
+  }
+
+  // New method to be called after login or when app is ready
+  initializeFromStorage() {
     if (typeof window !== 'undefined') {
       const savedTenantId = localStorage.getItem('selectedTenantId');
-      if (savedTenantId) {
+      const token = localStorage.getItem('token');
+      const login = localStorage.getItem('login');
+      
+      if (savedTenantId && token && login === 'true') {
         const id = Number(savedTenantId);
         this.selectedTenantIdSubject.next(id);
+        
         if (id > 0) {
           this.fetchTenantDetails(id);
         }
@@ -68,7 +79,11 @@ export class TenantService {
       localStorage.setItem('selectedTenantId', id.toString());
     }
     
-    if (id > 0) {
+    // Only fetch details if we have a token
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+    const login = typeof localStorage !== 'undefined' ? localStorage.getItem('login') : null;
+
+    if (id > 0 && token && login === 'true') {
       this.fetchTenantDetails(id);
     } else {
       this.selectedTenantSubject.next(null);
@@ -78,7 +93,12 @@ export class TenantService {
   private fetchTenantDetails(id: number) {
     this.getTenantById(id).subscribe({
       next: (tenant) => this.selectedTenantSubject.next(tenant),
-      error: (err) => console.error('Error fetching tenant details:', err)
+      error: (err) => {
+        console.error('Error fetching tenant details:', err);
+        if (err.status === 401 || err.status === 403) {
+          this.selectedTenantSubject.next(null);
+        }
+      }
     });
   }
 
@@ -87,6 +107,11 @@ export class TenantService {
   }
 
   getTenants(): Observable<Tenant[]> {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+    const login = typeof localStorage !== 'undefined' ? localStorage.getItem('login') : null;
+    
+    if (!token || login !== 'true') return of([]);
+    
     return this.http.get<any>(this.apiUrl, { headers: this.getAuthHeaders() }).pipe(
       map(response => response.value || response || []),
       catchError(() => of([]))

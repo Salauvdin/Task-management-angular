@@ -33,7 +33,32 @@ export class Login {
   constructor(
     private router: Router,
     private authService: AuthService
-  ) {}
+  ) {
+    // If already logged in, redirect to dashboard
+    if (this.authService.isLoggedIn() && !this.authService.isTokenExpired()) {
+      const user = this.authService.getCurrentUser();
+      if (user?.role) {
+        this.navigateByRole(user.role);
+      }
+    }
+  }
+
+  private navigateByRole(role: string) {
+    switch (role) {
+      case 'Admin':
+      case 'Super Admin':
+        this.router.navigate(['/admin/dashboard']);
+        break;
+      case 'Manager':
+        this.router.navigate(['/manager/dashboard']);
+        break;
+      case 'Member':
+        this.router.navigate(['/teammember/tasks']);
+        break;
+      default:
+        this.router.navigate(['/admin/dashboard']);
+    }
+  }
 
   togglePassword() {
     this.showPassword = !this.showPassword;

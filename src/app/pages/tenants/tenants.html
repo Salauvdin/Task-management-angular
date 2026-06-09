@@ -27,9 +27,9 @@
   <div class="tenants-grid">
     <div *ngFor="let tenant of tenants" 
          class="tenant-card" 
-         [class.active]="tenant.id === selectedTenantId"
+         [class.active]="tenant.id == selectedTenantId"
          (click)="selectTenant(tenant)">
-      <div class="active-badge" *ngIf="tenant.id === selectedTenantId">
+      <div class="active-badge" *ngIf="tenant.id == selectedTenantId">
         <span>Active</span>
       </div>
       <div class="tenant-info">
